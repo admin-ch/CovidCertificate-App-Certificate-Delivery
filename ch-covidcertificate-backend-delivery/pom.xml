@@ -31,10 +31,12 @@
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.organization>admin-ch</sonar.organization>
     <sonar.login>${env.SONAR_TOKEN}</sonar.login>
+    <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/../ch-covidcertificate-backend-delivery-report/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
   </properties>
 
   <modules>
     <module>ch-covidcertificate-backend-delivery-ws</module>
+    <module>ch-covidcertificate-backend-delivery-report</module>
   </modules>
 
   <dependencies>
