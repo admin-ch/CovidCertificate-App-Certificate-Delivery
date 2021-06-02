@@ -37,6 +37,8 @@
   <modules>
     <module>ch-covidcertificate-backend-delivery-ws</module>
     <module>ch-covidcertificate-backend-delivery-report</module>
+    <module>ch-covidcertificate-backend-delivery-model</module>
+    <module>ch-covidcertificate-backend-delivery-data</module>
   </modules>
 
   <dependencies>
