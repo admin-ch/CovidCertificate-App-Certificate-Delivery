@@ -10,10 +10,20 @@
 
 package ch.admin.bag.covidcertificate.backend.delivery.ws.controller;
 
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCertDelivery;
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistration;
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration;
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.RequestDeliveryPayload;
 import ch.ubique.openapi.docannotations.Documentation;
+import java.util.ArrayList;
+import javax.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -28,5 +38,70 @@ public class AppController {
     @GetMapping(value = "")
     public @ResponseBody String hello() {
         return "Hello from CH Covidcertificate Delivery App WS";
+    }
+
+    @Documentation(
+            description = "delivery registration endpoint",
+            responses = {
+                "200 => registration for delivery successful",
+                "409 => code collision. retry register with different code"
+            })
+    @CrossOrigin(origins = {"https://editor.swagger.io"})
+    @PostMapping(value = "/delivery/covidcert/register")
+    public ResponseEntity<Void> registerForDelivery(
+            @Valid @RequestBody DeliveryRegistration registration) {
+        // TODO
+        return ResponseEntity.ok().build();
+    }
+
+    @Documentation(
+            description = "covidcert delivery endpoint",
+            responses = {
+                "200 => list of covidcerts (empty list if not ready or already delivered)",
+                "403 => invalid signature",
+                "TODO => code not found"
+            })
+    @CrossOrigin(origins = {"https://editor.swagger.io"})
+    @PostMapping(value = "/delivery/covidcert")
+    public ResponseEntity<CovidCertDelivery> getCovidCertDelivery(
+            @Valid @RequestBody RequestDeliveryPayload payload) {
+        // TODO
+        return ResponseEntity.ok(new CovidCertDelivery(new ArrayList<>()));
+    }
+
+    @Documentation(
+            description = "delete covid cert. to be used after successful delivery",
+            responses = {
+                "200 => list of covidcerts (empty list if not ready or already delivered)",
+                "403 => invalid signature",
+                "TODO => code not found"
+            })
+    @CrossOrigin(origins = {"https://editor.swagger.io"})
+    @DeleteMapping(value = "/delivery/covidcert")
+    public ResponseEntity<Void> deleteCovidCert(
+            @Valid @RequestBody RequestDeliveryPayload payload) {
+        // TODO
+        return ResponseEntity.ok().build();
+    }
+
+    @Documentation(
+            description = "push registration endpoint",
+            responses = {"200 => registration for push successful"})
+    @CrossOrigin(origins = {"https://editor.swagger.io"})
+    @PostMapping(value = "/delivery/push/register")
+    public ResponseEntity<Void> registerForPush(@Valid @RequestBody PushRegistration registration) {
+        // TODO
+        return ResponseEntity.ok().build();
+    }
+
+    @Documentation(
+            description = "push deregistration endpoint",
+            responses = {"200 => push registration removed successfully"})
+    @CrossOrigin(origins = {"https://editor.swagger.io"})
+    @DeleteMapping(value = "/delivery/push/register")
+    public ResponseEntity<Void> deregisterForPush(
+            @Valid @RequestBody PushRegistration registration) {
+        // TODO
+        return ResponseEntity.ok().build();
     }
 }

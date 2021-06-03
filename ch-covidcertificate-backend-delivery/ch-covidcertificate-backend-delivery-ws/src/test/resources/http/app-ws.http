@@ -1,3 +1,49 @@
 ### hello
 GET {{baseUrl}}/v1/app
 Accept: application/json
+
+### register for delivery
+POST {{baseUrl}}/v1/app/delivery/covidcert/register
+Content-Type: application/json
+
+{
+  "code": "ABC-02-43-YH",
+  "publicKey": "base64string",
+  "alg": "EC"
+}
+
+### register for push
+POST {{baseUrl}}/v1/app/delivery/push/register
+Content-Type: application/json
+
+{
+  "pushToken": "some_push_token",
+  "pushType": "IOS"
+}
+
+### deregister for push
+DELETE {{baseUrl}}/v1/app/delivery/push/register
+Content-Type: application/json
+
+{
+  "pushToken": "some_push_token",
+  "pushType": "IOS"
+}
+
+### request covidcert delivery
+POST {{baseUrl}}/v1/app/delivery/covidcert
+Content-Type: application/json
+
+{
+  "code": "ABC-02-43-YH",
+  "signature": "base64string"
+}
+
+### delete covidcert
+DELETE {{baseUrl}}/v1/app/delivery/covidcert
+Content-Type: application/json
+
+{
+  "code": "ABC-02-43-YH",
+  "signature": "base64string"
+}
