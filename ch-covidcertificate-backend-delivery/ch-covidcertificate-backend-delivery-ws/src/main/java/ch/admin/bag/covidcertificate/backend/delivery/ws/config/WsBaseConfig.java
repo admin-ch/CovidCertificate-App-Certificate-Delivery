@@ -11,6 +11,7 @@
 package ch.admin.bag.covidcertificate.backend.delivery.ws.config;
 
 import ch.admin.bag.covidcertificate.backend.delivery.ws.controller.AppController;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.controller.CgsController;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.interceptor.HeaderInjector;
 import java.util.Map;
 import javax.sql.DataSource;
@@ -51,5 +52,10 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
     @Bean
     public AppController appController() {
         return new AppController();
+    }
+
+    @Bean
+    public CgsController cgsController() {
+        return new CgsController();
     }
 }

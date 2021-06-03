@@ -151,7 +151,8 @@
                         ch.admin.bag.covidcertificate.backend.delivery
                     </basePackages>
                     <controllers>
-                        ch.admin.bag.covidcertificate.backend.delivery.ws.controller.AppController
+                        <controller>ch.admin.bag.covidcertificate.backend.delivery.ws.controller.AppController</controller>
+                        <controller>ch.admin.bag.covidcertificate.backend.delivery.ws.controller.CgsController</controller>
                     </controllers>
                     <description>CH Covidcertificate Delivery API</description>
                     <apiUrls>

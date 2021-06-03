@@ -1,0 +1,13 @@
+### hello
+GET {{baseUrl}}/v1/cgs
+Accept: application/json
+
+### register for delivery
+POST {{baseUrl}}/v1/cgs/delivery/covidcert
+Content-Type: application/json
+
+{
+  "code": "ABC-02-43-YH",
+  "hcert": "base64string",
+  "pdf": "base64string"
+}
