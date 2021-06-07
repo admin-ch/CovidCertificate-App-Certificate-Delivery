@@ -17,6 +17,7 @@ CREATE TABLE t_transfer
 CREATE TABLE t_push_registration
 (
     pk_push_registration_id serial                  NOT NULL,
+    created_at              timestamp with time zone NOT NULL DEFAULT now(),
     push_token              character varying(4096) NOT NULL,
     push_type               character varying(3)   NOT NULL,
     CONSTRAINT PK_t_push_registration PRIMARY KEY (pk_push_registration_id)

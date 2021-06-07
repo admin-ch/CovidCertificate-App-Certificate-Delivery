@@ -71,7 +71,7 @@ public class AppController {
     @Documentation(
             description = "delete covid cert. to be used after successful delivery",
             responses = {
-                "200 => list of covidcerts (empty list if not ready or already delivered)",
+                "200 => covid certs deleted. covid certificate transfer is complete",
                 "403 => invalid signature",
                 "404 => code not found"
             })

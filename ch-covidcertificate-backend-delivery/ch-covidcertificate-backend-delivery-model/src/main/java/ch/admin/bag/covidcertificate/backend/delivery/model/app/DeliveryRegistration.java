@@ -17,7 +17,7 @@ public class DeliveryRegistration {
 
     @Documentation(
             description =
-                    "payload which was signed with format <action>:<code>:<unix_timestamp_in_ms>, where action is one of delete|get|register",
+                    "payload which was signed with format ${action}:${code}:${unix_timestamp_in_ms}, where action is one of delete|get|register",
             example = "register:A7KBZ91XL:1623051081000")
     @NotNull
     private String signaturePayload;
