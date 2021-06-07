@@ -41,7 +41,7 @@ public class CgsController {
             responses = {
                 "200 => delivery successful",
                 "403 => invalid jwt",
-                "TODO => code not found"
+                "404 => code not found"
             })
     @CrossOrigin(origins = {"https://editor.swagger.io"})
     @PostMapping(value = "/delivery/covidcert")

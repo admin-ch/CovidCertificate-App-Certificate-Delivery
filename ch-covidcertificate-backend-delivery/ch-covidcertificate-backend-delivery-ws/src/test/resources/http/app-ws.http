@@ -23,7 +23,7 @@ Content-Type: application/json
 }
 
 ### deregister for push
-DELETE {{baseUrl}}/v1/app/delivery/push/register
+POST {{baseUrl}}/v1/app/delivery/push/deregister
 Content-Type: application/json
 
 {
@@ -42,7 +42,7 @@ Content-Type: application/json
 }
 
 ### delete covidcert
-DELETE {{baseUrl}}/v1/app/delivery/covidcert
+POST {{baseUrl}}/v1/app/delivery/covidcert/delete
 Content-Type: application/json
 
 {
