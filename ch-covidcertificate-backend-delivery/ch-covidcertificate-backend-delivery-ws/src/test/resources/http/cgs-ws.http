@@ -1,9 +1,9 @@
 ### hello
-GET {{baseUrl}}/v1/cgs
+GET {{baseUrl}}/cgs/delivery/v1
 Accept: application/json
 
 ### register for delivery
-POST {{baseUrl}}/v1/cgs/delivery/covidcert
+POST {{baseUrl}}/cgs/delivery/v1/delivery/covidcert
 Content-Type: application/json
 
 {

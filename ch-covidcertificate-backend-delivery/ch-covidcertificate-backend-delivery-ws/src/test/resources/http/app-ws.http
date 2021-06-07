@@ -1,9 +1,9 @@
 ### hello
-GET {{baseUrl}}/v1/app
+GET {{baseUrl}}/app/delivery/v1
 Accept: application/json
 
 ### register for delivery
-POST {{baseUrl}}/v1/app/delivery/covidcert/register
+POST {{baseUrl}}/app/delivery/v1/covidcert/register
 Content-Type: application/json
 
 {
@@ -14,7 +14,7 @@ Content-Type: application/json
 }
 
 ### register for push
-POST {{baseUrl}}/v1/app/delivery/push/register
+POST {{baseUrl}}/app/delivery/v1/push/register
 Content-Type: application/json
 
 {
@@ -23,7 +23,7 @@ Content-Type: application/json
 }
 
 ### deregister for push
-POST {{baseUrl}}/v1/app/delivery/push/deregister
+POST {{baseUrl}}/app/delivery/v1/push/deregister
 Content-Type: application/json
 
 {
@@ -32,7 +32,7 @@ Content-Type: application/json
 }
 
 ### request covidcert delivery
-POST {{baseUrl}}/v1/app/delivery/covidcert
+POST {{baseUrl}}/app/delivery/v1/covidcert
 Content-Type: application/json
 
 {
@@ -42,7 +42,7 @@ Content-Type: application/json
 }
 
 ### delete covidcert
-POST {{baseUrl}}/v1/app/delivery/covidcert/delete
+POST {{baseUrl}}/app/delivery/v1/covidcert/complete
 Content-Type: application/json
 
 {

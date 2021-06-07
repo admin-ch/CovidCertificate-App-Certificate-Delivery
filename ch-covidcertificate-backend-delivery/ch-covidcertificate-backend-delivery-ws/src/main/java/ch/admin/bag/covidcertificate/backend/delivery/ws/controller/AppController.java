@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
-@RequestMapping("/v1/app")
+@RequestMapping("/app/delivery/v1")
 public class AppController {
 
     @Documentation(
@@ -46,7 +46,7 @@ public class AppController {
                 "409 => code collision. retry register with different code"
             })
     @CrossOrigin(origins = {"https://editor.swagger.io"})
-    @PostMapping(value = "/delivery/covidcert/register")
+    @PostMapping(value = "/covidcert/register")
     public ResponseEntity<Void> registerForDelivery(
             @Valid @RequestBody DeliveryRegistration registration) {
         // TODO
@@ -61,7 +61,7 @@ public class AppController {
                 "404 => code not found"
             })
     @CrossOrigin(origins = {"https://editor.swagger.io"})
-    @PostMapping(value = "/delivery/covidcert")
+    @PostMapping(value = "/covidcert")
     public ResponseEntity<CovidCertDelivery> getCovidCertDelivery(
             @Valid @RequestBody RequestDeliveryPayload payload) {
         // TODO
@@ -76,8 +76,8 @@ public class AppController {
                 "404 => code not found"
             })
     @CrossOrigin(origins = {"https://editor.swagger.io"})
-    @PostMapping(value = "/delivery/covidcert/delete")
-    public ResponseEntity<Void> deleteCovidCert(
+    @PostMapping(value = "/covidcert/complete")
+    public ResponseEntity<Void> covidCertDeliveryComplete(
             @Valid @RequestBody RequestDeliveryPayload payload) {
         // TODO
         return ResponseEntity.ok().build();
@@ -87,7 +87,7 @@ public class AppController {
             description = "push registration endpoint",
             responses = {"200 => registration for push successful"})
     @CrossOrigin(origins = {"https://editor.swagger.io"})
-    @PostMapping(value = "/delivery/push/register")
+    @PostMapping(value = "/push/register")
     public ResponseEntity<Void> registerForPush(@Valid @RequestBody PushRegistration registration) {
         // TODO
         return ResponseEntity.ok().build();
@@ -97,7 +97,7 @@ public class AppController {
             description = "push deregistration endpoint",
             responses = {"200 => push registration removed successfully"})
     @CrossOrigin(origins = {"https://editor.swagger.io"})
-    @PostMapping(value = "/delivery/push/deregister")
+    @PostMapping(value = "/push/deregister")
     public ResponseEntity<Void> deregisterForPush(
             @Valid @RequestBody PushRegistration registration) {
         // TODO

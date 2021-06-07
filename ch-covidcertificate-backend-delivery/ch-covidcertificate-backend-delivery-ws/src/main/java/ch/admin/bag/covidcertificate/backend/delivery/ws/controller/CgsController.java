@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 /** Controller for the Certificate Generation Service */
 @Controller
-@RequestMapping("/v1/cgs")
+@RequestMapping("/cgs/delivery/v1")
 public class CgsController {
 
     @Documentation(
@@ -44,7 +44,7 @@ public class CgsController {
                 "404 => code not found"
             })
     @CrossOrigin(origins = {"https://editor.swagger.io"})
-    @PostMapping(value = "/delivery/covidcert")
+    @PostMapping(value = "/covidcert")
     public ResponseEntity<Void> addCovidCert(@Valid @RequestBody CgsCovidCert covidCert) {
         // TODO
         return ResponseEntity.ok().build();
