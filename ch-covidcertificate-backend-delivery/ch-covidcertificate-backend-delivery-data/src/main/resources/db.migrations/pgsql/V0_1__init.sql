@@ -18,7 +18,7 @@ CREATE TABLE t_push_registration
 (
     pk_push_registration_id serial                  NOT NULL,
     push_token              character varying(4096) NOT NULL,
-    push_type               character varying(10)   NOT NULL,
+    push_type               character varying(3)   NOT NULL,
     CONSTRAINT PK_t_push_registration PRIMARY KEY (pk_push_registration_id)
 );
 

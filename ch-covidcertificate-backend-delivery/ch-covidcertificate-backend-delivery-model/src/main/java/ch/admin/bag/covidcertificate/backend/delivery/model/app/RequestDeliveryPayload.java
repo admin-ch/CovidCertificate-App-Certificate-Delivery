@@ -6,11 +6,19 @@ import javax.validation.constraints.NotNull;
 public class RequestDeliveryPayload {
     @Documentation(
             description =
-                    "client generated alpha numeric code used as identifier during the entire transfer")
+                    "client generated alpha numeric code used as identifier during the entire transfer",
+            example = "A7KBZ91XL")
     @NotNull
     private String code;
 
-    @Documentation(description = "signature for validation. base64")
+    @Documentation(
+            description =
+                    "payload which was signed with format <action>:<code>:<unix_timestamp_in_ms>, where action is one of delete|get|register",
+            example = "get:A7KBZ91XL:1623051081000")
+    @NotNull
+    private String signaturePayload;
+
+    @Documentation(description = "the signature calculated over signaturePayload. base64 encoded")
     @NotNull
     private String signature;
 
@@ -20,6 +28,14 @@ public class RequestDeliveryPayload {
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    public String getSignaturePayload() {
+        return signaturePayload;
+    }
+
+    public void setSignaturePayload(String signaturePayload) {
+        this.signaturePayload = signaturePayload;
     }
 
     public String getSignature() {

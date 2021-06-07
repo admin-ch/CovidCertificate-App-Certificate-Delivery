@@ -6,7 +6,8 @@ import javax.validation.constraints.NotNull;
 public class CgsCovidCert {
     @Documentation(
             description =
-                    "client generated alpha numeric code used as identifier during the entire transfer")
+                    "client generated alpha numeric code used as identifier during the entire transfer",
+            example = "A7KBZ91XL")
     @NotNull
     private String code;
 

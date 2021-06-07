@@ -9,7 +9,8 @@ Content-Type: application/json
 {
   "code": "ABC-02-43-YH",
   "publicKey": "base64string",
-  "alg": "EC"
+  "signature": "base64string",
+  "signaturePayload": "register:A7KBZ91XL:1623051081000"
 }
 
 ### register for push
@@ -36,7 +37,8 @@ Content-Type: application/json
 
 {
   "code": "ABC-02-43-YH",
-  "signature": "base64string"
+  "signature": "base64string",
+  "signaturePayload": "get:A7KBZ91XL:1623051081000"
 }
 
 ### delete covidcert
@@ -45,5 +47,6 @@ Content-Type: application/json
 
 {
   "code": "ABC-02-43-YH",
-  "signature": "base64string"
+  "signature": "base64string",
+  "signaturePayload": "get:A7KBZ91XL:1623051081000"
 }
