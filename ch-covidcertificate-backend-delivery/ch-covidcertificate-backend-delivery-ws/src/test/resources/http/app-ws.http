@@ -7,7 +7,7 @@ POST {{baseUrl}}/app/delivery/v1/covidcert/register
 Content-Type: application/json
 
 {
-  "code": "ABC-02-43-YH",
+  "code": "A7KBZ91XL",
   "publicKey": "base64string",
   "signature": "base64string",
   "signaturePayload": "register:A7KBZ91XL:1623051081000"
@@ -36,7 +36,7 @@ POST {{baseUrl}}/app/delivery/v1/covidcert
 Content-Type: application/json
 
 {
-  "code": "ABC-02-43-YH",
+  "code": "A7KBZ91XL",
   "signature": "base64string",
   "signaturePayload": "get:A7KBZ91XL:1623051081000"
 }
@@ -46,7 +46,7 @@ POST {{baseUrl}}/app/delivery/v1/covidcert/complete
 Content-Type: application/json
 
 {
-  "code": "ABC-02-43-YH",
+  "code": "A7KBZ91XL",
   "signature": "base64string",
   "signaturePayload": "get:A7KBZ91XL:1623051081000"
 }
