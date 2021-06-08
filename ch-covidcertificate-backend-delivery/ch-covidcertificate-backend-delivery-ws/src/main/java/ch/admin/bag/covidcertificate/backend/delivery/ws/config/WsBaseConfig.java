@@ -10,9 +10,12 @@
 
 package ch.admin.bag.covidcertificate.backend.delivery.ws.config;
 
+import ch.admin.bag.covidcertificate.backend.delivery.data.DeliveryDataService;
+import ch.admin.bag.covidcertificate.backend.delivery.data.impl.JdbcDeliveryDataServiceImpl;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.controller.AppController;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.controller.CgsController;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.interceptor.HeaderInjector;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.security.SignatureValidator;
 import java.util.Map;
 import javax.sql.DataSource;
 import org.flywaydb.core.Flyway;
@@ -50,8 +53,19 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
     }
 
     @Bean
-    public AppController appController() {
-        return new AppController();
+    public SignatureValidator signatureValidator() {
+        return new SignatureValidator();
+    }
+
+    @Bean
+    public DeliveryDataService deliveryDataService(DataSource dataSource) {
+        return new JdbcDeliveryDataServiceImpl(dataSource);
+    }
+
+    @Bean
+    public AppController appController(
+            DeliveryDataService deliveryDataService, SignatureValidator signatureValidator) {
+        return new AppController(deliveryDataService, signatureValidator);
     }
 
     @Bean

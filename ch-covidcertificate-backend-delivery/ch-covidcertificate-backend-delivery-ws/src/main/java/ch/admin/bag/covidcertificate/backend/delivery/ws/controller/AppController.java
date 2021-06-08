@@ -10,25 +10,42 @@
 
 package ch.admin.bag.covidcertificate.backend.delivery.ws.controller;
 
+import ch.admin.bag.covidcertificate.backend.delivery.data.DeliveryDataService;
+import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeAlreadyExistsException;
+import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeNotFoundException;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCertDelivery;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistration;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.RequestDeliveryPayload;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.security.SignatureValidator;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidSignatureException;
 import ch.ubique.openapi.docannotations.Documentation;
 import java.util.ArrayList;
 import javax.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 @Controller
 @RequestMapping("/app/delivery/v1")
 public class AppController {
+
+    private final DeliveryDataService deliveryDataService;
+    private final SignatureValidator signatureValidator;
+
+    public AppController(
+            DeliveryDataService deliveryDataService, SignatureValidator signatureValidator) {
+        this.deliveryDataService = deliveryDataService;
+        this.signatureValidator = signatureValidator;
+    }
 
     @Documentation(
             description = "Echo endpoint",
@@ -48,8 +65,11 @@ public class AppController {
     @CrossOrigin(origins = {"https://editor.swagger.io"})
     @PostMapping(value = "/covidcert/register")
     public ResponseEntity<Void> registerForDelivery(
-            @Valid @RequestBody DeliveryRegistration registration) {
-        // TODO
+            @Valid @RequestBody DeliveryRegistration registration)
+            throws CodeAlreadyExistsException, InvalidSignatureException {
+        signatureValidator.validate(
+                registration.getSignaturePayload(), registration.getSignature());
+        deliveryDataService.initTransfer(registration);
         return ResponseEntity.ok().build();
     }
 
@@ -63,8 +83,10 @@ public class AppController {
     @CrossOrigin(origins = {"https://editor.swagger.io"})
     @PostMapping(value = "/covidcert")
     public ResponseEntity<CovidCertDelivery> getCovidCertDelivery(
-            @Valid @RequestBody RequestDeliveryPayload payload) {
-        // TODO
+            @Valid @RequestBody RequestDeliveryPayload payload)
+            throws CodeNotFoundException, InvalidSignatureException {
+        signatureValidator.validate(payload.getSignaturePayload(), payload.getSignature());
+        deliveryDataService.findCovidCerts(payload.getCode());
         return ResponseEntity.ok(new CovidCertDelivery(new ArrayList<>()));
     }
 
@@ -78,8 +100,10 @@ public class AppController {
     @CrossOrigin(origins = {"https://editor.swagger.io"})
     @PostMapping(value = "/covidcert/complete")
     public ResponseEntity<Void> covidCertDeliveryComplete(
-            @Valid @RequestBody RequestDeliveryPayload payload) {
-        // TODO
+            @Valid @RequestBody RequestDeliveryPayload payload)
+            throws CodeNotFoundException, InvalidSignatureException {
+        signatureValidator.validate(payload.getSignaturePayload(), payload.getSignature());
+        deliveryDataService.closeTransfer(payload.getCode());
         return ResponseEntity.ok().build();
     }
 
@@ -89,7 +113,7 @@ public class AppController {
     @CrossOrigin(origins = {"https://editor.swagger.io"})
     @PostMapping(value = "/push/register")
     public ResponseEntity<Void> registerForPush(@Valid @RequestBody PushRegistration registration) {
-        // TODO
+        deliveryDataService.insertPushRegistration(registration);
         return ResponseEntity.ok().build();
     }
 
@@ -100,7 +124,25 @@ public class AppController {
     @PostMapping(value = "/push/deregister")
     public ResponseEntity<Void> deregisterForPush(
             @Valid @RequestBody PushRegistration registration) {
-        // TODO
+        deliveryDataService.removePushRegistration(registration);
         return ResponseEntity.ok().build();
+    }
+
+    @ExceptionHandler({CodeAlreadyExistsException.class})
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ResponseEntity<String> codeAlreadyExists() {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body("code already in use");
+    }
+
+    @ExceptionHandler({CodeNotFoundException.class})
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<String> codeNotFound() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("code not found");
+    }
+
+    @ExceptionHandler({InvalidSignatureException.class})
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ResponseEntity<String> invalidSignature() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("invalid signature");
     }
 }
