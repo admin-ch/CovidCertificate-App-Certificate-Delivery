@@ -7,7 +7,6 @@ import ch.admin.bag.covidcertificate.backend.delivery.data.mapper.CovidCertRowMa
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistration;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration;
-import ch.admin.bag.covidcertificate.backend.delivery.model.app.RequestDeliveryPayload;
 import java.util.List;
 import javax.sql.DataSource;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -57,14 +56,13 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CovidCert> findCovidCerts(RequestDeliveryPayload requestDeliveryPayload)
-            throws CodeNotFoundException {
+    public List<CovidCert> findCovidCerts(String code) throws CodeNotFoundException {
         Integer pkTransferId = null;
         try {
             pkTransferId =
                     jt.queryForObject(
                             "select pk_transfer_id from t_transfer where code = :code",
-                            new MapSqlParameterSource("code", requestDeliveryPayload.getCode()),
+                            new MapSqlParameterSource("code", code),
                             Integer.class);
         } catch (EmptyResultDataAccessException e) {
             throw new CodeNotFoundException();
@@ -79,12 +77,11 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
 
     @Override
     @Transactional(readOnly = false)
-    public void closeTransfer(RequestDeliveryPayload requestDeliveryPayload)
-            throws CodeNotFoundException {
-        if (transferCodeExists(requestDeliveryPayload.getCode())) {
+    public void closeTransfer(String code) throws CodeNotFoundException {
+        if (transferCodeExists(code)) {
             jt.update(
                     "delete from t_transfer where code = :code",
-                    new MapSqlParameterSource("code", requestDeliveryPayload.getCode()));
+                    new MapSqlParameterSource("code", code));
         } else {
             throw new CodeNotFoundException();
         }

@@ -21,7 +21,6 @@ import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeNotFoun
 import ch.admin.bag.covidcertificate.backend.delivery.data.util.PostgresDbCleaner;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistration;
-import ch.admin.bag.covidcertificate.backend.delivery.model.app.RequestDeliveryPayload;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -73,17 +72,11 @@ public class DeliveryDataServiceTest {
         deliveryDataService.initTransfer(registration);
 
         // find covid certs
-        RequestDeliveryPayload requestDeliveryPayload = new RequestDeliveryPayload();
-        requestDeliveryPayload.setCode(CODE);
-        List<CovidCert> covidCerts = deliveryDataService.findCovidCerts(requestDeliveryPayload);
+        List<CovidCert> covidCerts = deliveryDataService.findCovidCerts(CODE);
         assertTrue(covidCerts.isEmpty());
 
         // find covid certs unknown code
-        RequestDeliveryPayload unknownCodePayload = new RequestDeliveryPayload();
-        unknownCodePayload.setCode("XYZ");
-        assertThrows(
-                CodeNotFoundException.class,
-                () -> deliveryDataService.findCovidCerts(unknownCodePayload));
+        assertThrows(CodeNotFoundException.class, () -> deliveryDataService.findCovidCerts("XYZ"));
     }
 
     @Test
@@ -93,14 +86,10 @@ public class DeliveryDataServiceTest {
         deliveryDataService.initTransfer(registration);
 
         // close transfer
-        RequestDeliveryPayload requestDeliveryPayload = new RequestDeliveryPayload();
-        requestDeliveryPayload.setCode(CODE);
-        deliveryDataService.closeTransfer(requestDeliveryPayload);
+        deliveryDataService.closeTransfer(CODE);
 
         // check transfer is closed
-        assertThrows(
-                CodeNotFoundException.class,
-                () -> deliveryDataService.findCovidCerts(requestDeliveryPayload));
+        assertThrows(CodeNotFoundException.class, () -> deliveryDataService.findCovidCerts(CODE));
         // code is available again
         deliveryDataService.initTransfer(registration);
     }
