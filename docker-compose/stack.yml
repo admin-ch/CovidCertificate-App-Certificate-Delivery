@@ -10,7 +10,7 @@ services:
       POSTGRES_DB: covidcert
       POSTGRES_USER: covidcert
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - covidcert_delivery_db_data:/var/lib/postgresql/data
 volumes:
