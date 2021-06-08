@@ -31,7 +31,7 @@ CREATE TABLE t_covidcert
     encrypted_pdf   text                     NOT NULL,
     fk_transfer_id  integer                  NOT NULL,
     CONSTRAINT PK_t_covidcert PRIMARY KEY (pk_covidcert_id),
-    CONSTRAINT FK_20 FOREIGN KEY (fk_transfer_id) REFERENCES t_transfer (pk_transfer_id)
+    CONSTRAINT FK_20 FOREIGN KEY (fk_transfer_id) REFERENCES t_transfer (pk_transfer_id) on delete cascade
 );
 
 CREATE INDEX fkIdx_21 ON t_covidcert ( fk_transfer_id );
