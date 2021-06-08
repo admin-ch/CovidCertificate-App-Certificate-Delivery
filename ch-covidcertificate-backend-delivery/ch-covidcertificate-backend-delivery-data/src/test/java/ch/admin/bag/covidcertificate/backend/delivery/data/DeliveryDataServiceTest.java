@@ -10,6 +10,7 @@
 
 package ch.admin.bag.covidcertificate.backend.delivery.data;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -21,6 +22,8 @@ import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeNotFoun
 import ch.admin.bag.covidcertificate.backend.delivery.data.util.PostgresDbCleaner;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistration;
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration;
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -92,5 +95,51 @@ public class DeliveryDataServiceTest {
         assertThrows(CodeNotFoundException.class, () -> deliveryDataService.findCovidCerts(CODE));
         // code is available again
         deliveryDataService.initTransfer(registration);
+    }
+
+    @Test
+    public void testPushRegistration() throws Exception {
+        // insert push registration
+        PushRegistration pushRegistration = new PushRegistration();
+        String pushToken = "push_token";
+        pushRegistration.setPushToken(pushToken);
+        pushRegistration.setPushType(PushType.IOS);
+        deliveryDataService.insertPushRegistration(pushRegistration);
+
+        // check push registration added
+        List<PushRegistration> pushRegistrations = deliveryDataService.findAllPushRegistrations();
+        assertEquals(1, pushRegistrations.size());
+        assertPushRegistration(pushRegistration, pushRegistrations.get(0));
+
+        // insert same push registration again
+        deliveryDataService.insertPushRegistration(pushRegistration);
+
+        // check no change
+        pushRegistrations = deliveryDataService.findAllPushRegistrations();
+        assertEquals(1, pushRegistrations.size());
+        assertPushRegistration(pushRegistration, pushRegistrations.get(0));
+
+        // insert another push registration
+        PushRegistration anotherPushRegistration = new PushRegistration();
+        anotherPushRegistration.setPushToken("another_push_token");
+        anotherPushRegistration.setPushType(PushType.IOS);
+        deliveryDataService.insertPushRegistration(anotherPushRegistration);
+
+        // check push registration added
+        pushRegistrations = deliveryDataService.findAllPushRegistrations();
+        assertEquals(2, pushRegistrations.size());
+
+        // remove push registration
+        deliveryDataService.removePushRegistration(pushRegistration);
+
+        // check push registration removed
+        pushRegistrations = deliveryDataService.findAllPushRegistrations();
+        assertEquals(1, pushRegistrations.size());
+        assertPushRegistration(anotherPushRegistration, pushRegistrations.get(0));
+    }
+
+    private void assertPushRegistration(PushRegistration expected, PushRegistration actual) {
+        assertEquals(expected.getPushToken(), actual.getPushToken());
+        assertEquals(expected.getPushType(), actual.getPushType());
     }
 }

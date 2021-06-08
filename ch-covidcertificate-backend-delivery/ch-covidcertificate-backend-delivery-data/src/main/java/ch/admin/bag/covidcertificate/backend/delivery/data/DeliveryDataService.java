@@ -17,4 +17,6 @@ public interface DeliveryDataService {
     public void insertPushRegistration(PushRegistration registration);
 
     public void removePushRegistration(PushRegistration registration);
+
+    public List<PushRegistration> findAllPushRegistrations();
 }

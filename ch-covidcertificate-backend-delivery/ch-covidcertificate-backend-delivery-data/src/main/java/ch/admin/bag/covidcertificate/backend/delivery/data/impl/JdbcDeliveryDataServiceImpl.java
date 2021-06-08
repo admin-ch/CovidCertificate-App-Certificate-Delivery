@@ -4,6 +4,7 @@ import ch.admin.bag.covidcertificate.backend.delivery.data.DeliveryDataService;
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeAlreadyExistsException;
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeNotFoundException;
 import ch.admin.bag.covidcertificate.backend.delivery.data.mapper.CovidCertRowMapper;
+import ch.admin.bag.covidcertificate.backend.delivery.data.mapper.PushRegistrationRowMapper;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistration;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration;
@@ -114,6 +115,15 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
                         + " where push_token = :push_token"
                         + " and push_type = :push_type";
         jt.update(sql, createPushRegistrationParams(registration));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PushRegistration> findAllPushRegistrations() {
+        return jt.query(
+                "select * from t_push_registration",
+                new MapSqlParameterSource(),
+                new PushRegistrationRowMapper());
     }
 
     private MapSqlParameterSource createPushRegistrationParams(PushRegistration registration) {
