@@ -119,7 +119,7 @@
                 <version>${spring-boot-version}</version>
                 <configuration>
                     <mainClass>
-                        ch.admin.bag.covidcertificate.github.backend.delivery.ws.Application
+                        ch.admin.bag.covidcertificate.backend.delivery.ws.Application
                     </mainClass>
                 </configuration>
                 <executions>
