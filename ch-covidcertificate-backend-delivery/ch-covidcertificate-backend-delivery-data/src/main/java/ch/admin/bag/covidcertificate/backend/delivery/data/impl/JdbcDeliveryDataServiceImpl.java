@@ -5,9 +5,12 @@ import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeAlready
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeNotFoundException;
 import ch.admin.bag.covidcertificate.backend.delivery.data.mapper.CovidCertRowMapper;
 import ch.admin.bag.covidcertificate.backend.delivery.data.mapper.PushRegistrationRowMapper;
+import ch.admin.bag.covidcertificate.backend.delivery.data.mapper.TransferRowMapper;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistration;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration;
+import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
+import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
 import java.util.List;
 import javax.sql.DataSource;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -58,22 +61,37 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
     @Override
     @Transactional(readOnly = true)
     public List<CovidCert> findCovidCerts(String code) throws CodeNotFoundException {
-        Integer pkTransferId = null;
-        try {
-            pkTransferId =
-                    jt.queryForObject(
-                            "select pk_transfer_id from t_transfer where code = :code",
-                            new MapSqlParameterSource("code", code),
-                            Integer.class);
-        } catch (EmptyResultDataAccessException e) {
-            throw new CodeNotFoundException();
-        }
-
         String sql = "select * from t_covidcert where fk_transfer_id = :fk_transfer_id";
         return jt.query(
                 sql,
-                new MapSqlParameterSource("fk_transfer_id", pkTransferId),
+                new MapSqlParameterSource("fk_transfer_id", findPkTransferId(code)),
                 new CovidCertRowMapper());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Integer findPkTransferId(String code) throws CodeNotFoundException {
+        try {
+            return jt.queryForObject(
+                    "select pk_transfer_id from t_transfer where code = :code",
+                    new MapSqlParameterSource("code", code),
+                    Integer.class);
+        } catch (EmptyResultDataAccessException e) {
+            throw new CodeNotFoundException();
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DbTransfer findTransfer(String code) throws CodeNotFoundException {
+        try {
+            return jt.queryForObject(
+                    "select * from t_transfer where code = :code",
+                    new MapSqlParameterSource("code", code),
+                    new TransferRowMapper());
+        } catch (EmptyResultDataAccessException e) {
+            throw new CodeNotFoundException();
+        }
     }
 
     @Override
@@ -126,6 +144,12 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
                 new PushRegistrationRowMapper());
     }
 
+    @Override
+    @Transactional(readOnly = false)
+    public void insertCovidCert(DbCovidCert covidCert) {
+        covidCertInsert.execute(createCovidCertParams(covidCert));
+    }
+
     private MapSqlParameterSource createPushRegistrationParams(PushRegistration registration) {
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("push_token", registration.getPushToken());
@@ -137,6 +161,14 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("code", registration.getCode());
         params.addValue("public_key", registration.getPublicKey());
+        return params;
+    }
+
+    private MapSqlParameterSource createCovidCertParams(DbCovidCert covidCert) {
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("fk_transfer_id", covidCert.getFkTransfer());
+        params.addValue("encrypted_hcert", covidCert.getEncryptedHcert());
+        params.addValue("encrypted_pdf", covidCert.getEncryptedPdf());
         return params;
     }
 }
