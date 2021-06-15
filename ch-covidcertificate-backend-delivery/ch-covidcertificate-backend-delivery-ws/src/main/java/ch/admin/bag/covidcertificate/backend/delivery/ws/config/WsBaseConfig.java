@@ -57,8 +57,6 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
 
     public abstract Flyway flyway();
 
-    public abstract String getDbType();
-
     @Override
     public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
         try {
