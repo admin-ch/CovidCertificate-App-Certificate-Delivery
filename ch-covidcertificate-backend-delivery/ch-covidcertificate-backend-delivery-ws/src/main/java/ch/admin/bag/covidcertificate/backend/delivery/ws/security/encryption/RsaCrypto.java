@@ -5,7 +5,9 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.Signature;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
@@ -16,15 +18,20 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class RsaCrypto implements Crypto {
+public class RsaCrypto extends Crypto {
+
+    private static final Logger logger = LoggerFactory.getLogger(RsaCrypto.class);
 
     @Override
     public String encrypt(String toEncrypt, String publicKey)
             throws NoSuchPaddingException, NoSuchAlgorithmException,
                     InvalidAlgorithmParameterException, InvalidKeyException,
                     IllegalBlockSizeException, BadPaddingException, InvalidKeySpecException {
-        RSAPublicKey rsaPubKey = getRsaPublicKey(publicKey);
+        RSAPublicKey rsaPubKey = (RSAPublicKey) getPublicKey(publicKey);
 
         // generate random secret and random IV
         SecureRandom secureRandom = new SecureRandom();
@@ -65,12 +72,17 @@ public class RsaCrypto implements Crypto {
         return Base64.getEncoder().encodeToString(all);
     }
 
-    private RSAPublicKey getRsaPublicKey(String publicKey)
+    @Override
+    protected PublicKey getPublicKey(String publicKey)
             throws NoSuchAlgorithmException, InvalidKeySpecException {
         byte[] decoded = Base64.getDecoder().decode(publicKey);
         X509EncodedKeySpec spec = new X509EncodedKeySpec(decoded);
         KeyFactory kf = KeyFactory.getInstance("RSA");
-        RSAPublicKey rsaPubKey = (RSAPublicKey) kf.generatePublic(spec);
-        return rsaPubKey;
+        return kf.generatePublic(spec);
+    }
+
+    @Override
+    protected Signature getSignature() throws NoSuchAlgorithmException {
+        return Signature.getInstance("SHA256withRSA/PSS", new BouncyCastleProvider());
     }
 }

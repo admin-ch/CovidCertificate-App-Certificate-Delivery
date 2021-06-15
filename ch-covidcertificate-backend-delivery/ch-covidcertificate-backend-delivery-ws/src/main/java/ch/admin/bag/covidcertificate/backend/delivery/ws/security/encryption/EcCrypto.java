@@ -9,6 +9,8 @@ import java.security.KeyFactory;
 import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.Signature;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.ECParameterSpec;
@@ -25,9 +27,12 @@ import javax.crypto.KeyAgreement;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class EcCrypto implements Crypto {
+public class EcCrypto extends Crypto {
 
+    private static final Logger logger = LoggerFactory.getLogger(EcCrypto.class);
     public static final String SECP256R1 = "secp256r1";
 
     @Override
@@ -127,5 +132,29 @@ public class EcCrypto implements Crypto {
         byte[] result = Arrays.copyOf(array1, array1.length + array2.length);
         System.arraycopy(array2, 0, result, array1.length, array2.length);
         return result;
+    }
+
+    @Override
+    protected PublicKey getPublicKey(String publicKey)
+            throws NoSuchAlgorithmException, InvalidParameterSpecException,
+                    InvalidKeySpecException {
+        // the ios public key...
+        var publicKeyBytes = Base64.getDecoder().decode(publicKey);
+
+        // ... is in uncompressed octal represenation (0x04 | X | Y)
+        var x = Arrays.copyOfRange(publicKeyBytes, 1, 33);
+        var y = Arrays.copyOfRange(publicKeyBytes, 33, publicKeyBytes.length);
+
+        KeyFactory kf = KeyFactory.getInstance("EC");
+        var ecKeySpec =
+                new ECPublicKeySpec(
+                        new ECPoint(new BigInteger(1, x), new BigInteger(1, y)),
+                        EcCrypto.ecParameterSpecForCurve(EcCrypto.SECP256R1));
+        return kf.generatePublic(ecKeySpec);
+    }
+
+    @Override
+    protected Signature getSignature() throws NoSuchAlgorithmException {
+        return Signature.getInstance("SHA256withECDSA");
     }
 }
