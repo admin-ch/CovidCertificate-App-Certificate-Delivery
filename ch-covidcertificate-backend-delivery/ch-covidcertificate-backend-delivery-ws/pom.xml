@@ -91,6 +91,13 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
+
+        <!--    Silent push    -->
+        <dependency>
+            <groupId>com.eatthepath</groupId>
+            <artifactId>pushy</artifactId>
+            <version>0.14.2</version>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
@@ -159,8 +166,12 @@
                         ch.admin.bag.covidcertificate.backend.delivery
                     </basePackages>
                     <controllers>
-                        <controller>ch.admin.bag.covidcertificate.backend.delivery.ws.controller.AppController</controller>
-                        <controller>ch.admin.bag.covidcertificate.backend.delivery.ws.controller.CgsController</controller>
+                        <controller>
+                            ch.admin.bag.covidcertificate.backend.delivery.ws.controller.AppController
+                        </controller>
+                        <controller>
+                            ch.admin.bag.covidcertificate.backend.delivery.ws.controller.CgsController
+                        </controller>
                     </controllers>
                     <description>CH Covidcertificate Delivery API</description>
                     <apiUrls>
