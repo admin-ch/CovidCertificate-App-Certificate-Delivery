@@ -41,10 +41,9 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 @ActiveProfiles("postgres")
 public class DeliveryDataServiceTest {
 
-    @Autowired private DeliveryDataService deliveryDataService;
-
     public static final String CODE = "1A2B3C4D5";
     public static final String PUBLIC_KEY = "public_key";
+    @Autowired private DeliveryDataService deliveryDataService;
 
     @Test
     public void testInitTransfer() throws Exception {
@@ -109,7 +108,8 @@ public class DeliveryDataServiceTest {
         deliveryDataService.insertPushRegistration(pushRegistration);
 
         // check push registration added
-        List<PushRegistration> pushRegistrations = deliveryDataService.findAllPushRegistrations();
+        List<PushRegistration> pushRegistrations =
+                deliveryDataService.getPushRegistrationByType(PushType.IOS);
         assertEquals(1, pushRegistrations.size());
         assertPushRegistration(pushRegistration, pushRegistrations.get(0));
 
@@ -117,7 +117,7 @@ public class DeliveryDataServiceTest {
         deliveryDataService.insertPushRegistration(pushRegistration);
 
         // check no change
-        pushRegistrations = deliveryDataService.findAllPushRegistrations();
+        pushRegistrations = deliveryDataService.getPushRegistrationByType(PushType.IOS);
         assertEquals(1, pushRegistrations.size());
         assertPushRegistration(pushRegistration, pushRegistrations.get(0));
 
@@ -128,14 +128,14 @@ public class DeliveryDataServiceTest {
         deliveryDataService.insertPushRegistration(anotherPushRegistration);
 
         // check push registration added
-        pushRegistrations = deliveryDataService.findAllPushRegistrations();
+        pushRegistrations = deliveryDataService.getPushRegistrationByType(PushType.IOS);
         assertEquals(2, pushRegistrations.size());
 
         // remove push registration
-        deliveryDataService.removePushRegistration(pushRegistration);
+        deliveryDataService.removeRegistrations(List.of(pushRegistration.getPushToken()));
 
         // check push registration removed
-        pushRegistrations = deliveryDataService.findAllPushRegistrations();
+        pushRegistrations = deliveryDataService.getPushRegistrationByType(PushType.IOS);
         assertEquals(1, pushRegistrations.size());
         assertPushRegistration(anotherPushRegistration, pushRegistrations.get(0));
     }

@@ -11,6 +11,7 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistra
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
 import java.util.List;
 import javax.sql.DataSource;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -129,21 +130,20 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
 
     @Override
     @Transactional(readOnly = false)
-    public void removePushRegistration(PushRegistration registration) {
-        String sql =
-                "delete from t_push_registration"
-                        + " where push_token = :push_token"
-                        + " and push_type = :push_type";
-        jt.update(sql, createPushRegistrationParams(registration));
+    public void removeRegistrations(List<String> tokensToRemove) {
+        if (tokensToRemove != null && !tokensToRemove.isEmpty()) {
+            jt.update(
+                    "delete from t_push_registration where push_token in (:tokensToRemove)",
+                    new MapSqlParameterSource("tokensToRemove", tokensToRemove));
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<PushRegistration> findAllPushRegistrations() {
-        return jt.query(
-                "select * from t_push_registration",
-                new MapSqlParameterSource(),
-                new PushRegistrationRowMapper());
+    public List<PushRegistration> getPushRegistrationByType(final PushType pushType) {
+        final var sql = "select * from t_push_registration where push_type = :push_type";
+        final var params = new MapSqlParameterSource("push_type", pushType.name());
+        return jt.query(sql, params, new PushRegistrationRowMapper());
     }
 
     @Override
