@@ -1,7 +1,7 @@
 package ch.admin.bag.covidcertificate.backend.delivery.ws.service;
 
 import ch.admin.bag.covidcertificate.backend.delivery.data.DeliveryDataService;
-import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration;
+import ch.admin.bag.covidcertificate.backend.delivery.data.impl.PushRegistrationWrapper;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
 import com.eatthepath.pushy.apns.ApnsClient;
 import com.eatthepath.pushy.apns.ApnsClientBuilder;
@@ -20,10 +20,10 @@ import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,18 +96,46 @@ public class IOSHeartbeatSilentPush {
             }
         }
 
-        logger.info("Load tokens from database.");
-        final var iodPushTokens =
-                pushRegistrationDataService.getPushRegistrationByType(PushType.IOD).stream()
-                        .map(PushRegistration::getPushToken)
-                        .collect(Collectors.toSet());
-        final var iosPushTokens =
-                pushRegistrationDataService.getPushRegistrationByType(PushType.IOS).stream()
-                        .map(PushRegistration::getPushToken)
-                        .collect(Collectors.toSet());
-        logger.info(
-                "Found {} iOD and {} iOS push tokens.", iodPushTokens.size(), iosPushTokens.size());
+        logger.info("Load tokens from database batch-wise.");
+        var maxId = 0;
 
+        while (true) {
+            final var iodRegistrationWrappers =
+                    pushRegistrationDataService.getPushRegistrationByType(PushType.IOD, maxId);
+            final var iosRegistrationWrappers =
+                    pushRegistrationDataService.getPushRegistrationByType(PushType.IOS, maxId);
+            logger.info(
+                    "Found {} iOD and {} iOS push tokens.",
+                    iodRegistrationWrappers.size(),
+                    iosRegistrationWrappers.size());
+            if (!iodRegistrationWrappers.isEmpty() || !iosRegistrationWrappers.isEmpty()) {
+                Set<String> iodPushTokens = new HashSet<>();
+                maxId = getTokens(maxId, iodRegistrationWrappers, iodPushTokens);
+                Set<String> iosPushTokens = new HashSet<>();
+                maxId = getTokens(maxId, iosRegistrationWrappers, iosPushTokens);
+                sendPushNotificationsBatch(iodPushTokens, iosPushTokens);
+            } else {
+                break;
+            }
+        }
+        logger.info("iOS hearbeat push done");
+    }
+
+    private int getTokens(
+            int maxId,
+            List<PushRegistrationWrapper> iodRegistrationWrappers,
+            Set<String> iodPushTokens) {
+        for (PushRegistrationWrapper pushRegistrationWrapper : iodRegistrationWrappers) {
+            iodPushTokens.add(pushRegistrationWrapper.getPushRegistration().getPushToken());
+            final var id = pushRegistrationWrapper.getId();
+            if (id > maxId) {
+                maxId = id;
+            }
+        }
+        return maxId;
+    }
+
+    private void sendPushNotificationsBatch(Set<String> iodPushTokens, Set<String> iosPushTokens) {
         final var appleIodPushData = createAppleSilentPushNotifications(iodPushTokens);
         final var appleIosPushData = createAppleSilentPushNotifications(iosPushTokens);
 
@@ -151,7 +179,6 @@ public class IOSHeartbeatSilentPush {
         logger.info(
                 "All notification sent. Got {} invalid tokens to remove", tokensToRemove.size());
         pushRegistrationDataService.removeRegistrations(tokensToRemove);
-        logger.info("iOS hearbeat push done");
     }
 
     private List<ApnsPushNotification> createAppleSilentPushNotifications(

@@ -24,6 +24,6 @@ public class DeliveryDataServiceConfig {
 
     @Bean
     public DeliveryDataService deliveryDataService() {
-        return new JdbcDeliveryDataServiceImpl(dataSource);
+        return new JdbcDeliveryDataServiceImpl(dataSource, 100000);
     }
 }

@@ -100,7 +100,7 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
 
     @Bean
     public DeliveryDataService deliveryDataService(DataSource dataSource) {
-        return new JdbcDeliveryDataServiceImpl(dataSource);
+        return new JdbcDeliveryDataServiceImpl(dataSource, 0);
     }
 
     @Bean
