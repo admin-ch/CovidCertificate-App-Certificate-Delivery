@@ -20,6 +20,7 @@ import ch.admin.bag.covidcertificate.backend.delivery.ws.security.encryption.Cry
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.encryption.EcCrypto;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.encryption.RsaCrypto;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.signature.JwsMessageConverter;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.service.IOSHeartbeatSilentPush;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.KeyStore;
@@ -45,16 +46,25 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public abstract class WsBaseConfig implements WebMvcConfigurer {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-
+    @Value("${ws.jws.p12:}")
+    public String p12KeyStore;
+    @Value("${ws.jws.password:}")
+    public String p12KeyStorePassword;
     @Value(
             "#{${ws.security.headers: {'X-Content-Type-Options':'nosniff', 'X-Frame-Options':'DENY','X-Xss-Protection':'1; mode=block'}}}")
     Map<String, String> additionalHeaders;
+    // base64 encoded p8 file
+    @Value("${push.ios.signingkey}")
+    private String iosPushSigningKey;
 
-    @Value("${ws.jws.p12:}")
-    public String p12KeyStore;
+    @Value("${push.ios.teamid}")
+    private String iosPushTeamId;
 
-    @Value("${ws.jws.password:}")
-    public String p12KeyStorePassword;
+    @Value("${push.ios.keyid}")
+    private String iosPushKeyId;
+
+    @Value("${push.ios.topic}")
+    private String iosPushTopic;
 
     public abstract DataSource dataSource();
 
@@ -127,5 +137,17 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
     public CgsController cgsController(
             DeliveryDataService deliveryDataService, Crypto ecCrypto, Crypto rsaCrypto) {
         return new CgsController(deliveryDataService, ecCrypto, rsaCrypto);
+    }
+
+    @Bean
+    public IOSHeartbeatSilentPush iosHeartbeatSilentPush(
+            DeliveryDataService pushRegistrationDataService) {
+        byte[] pushSigningKey = Base64.getDecoder().decode(iosPushSigningKey);
+        return new IOSHeartbeatSilentPush(
+                pushRegistrationDataService,
+                new ByteArrayInputStream(pushSigningKey),
+                iosPushTeamId,
+                iosPushKeyId,
+                iosPushTopic);
     }
 }
