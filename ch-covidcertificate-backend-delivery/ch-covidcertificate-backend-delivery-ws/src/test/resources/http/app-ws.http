@@ -4,6 +4,7 @@ Accept: application/json
 
 ### register for delivery
 POST {{baseUrl}}/app/delivery/v1/covidcert/register
+Accept: application/json+jws
 Content-Type: application/json
 
 {
@@ -15,6 +16,7 @@ Content-Type: application/json
 
 ### register for push
 POST {{baseUrl}}/app/delivery/v1/push/register
+Accept: application/json+jws
 Content-Type: application/json
 
 {
@@ -24,6 +26,7 @@ Content-Type: application/json
 
 ### deregister for push
 POST {{baseUrl}}/app/delivery/v1/push/deregister
+Accept: application/json+jws
 Content-Type: application/json
 
 {
@@ -33,6 +36,7 @@ Content-Type: application/json
 
 ### request covidcert delivery
 POST {{baseUrl}}/app/delivery/v1/covidcert
+Accept: application/json+jws
 Content-Type: application/json
 
 {
@@ -43,6 +47,7 @@ Content-Type: application/json
 
 ### delete covidcert
 POST {{baseUrl}}/app/delivery/v1/covidcert/complete
+Accept: application/json+jws
 Content-Type: application/json
 
 {
