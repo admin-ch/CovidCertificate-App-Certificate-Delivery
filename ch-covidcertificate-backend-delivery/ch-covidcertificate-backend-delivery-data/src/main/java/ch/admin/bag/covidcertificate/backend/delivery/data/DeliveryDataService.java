@@ -32,7 +32,7 @@ public interface DeliveryDataService {
 
     void removeRegistrations(List<String> tokensToRemove);
 
-    List<PushRegistrationWrapper> getPushRegistrationByType(PushType pushType, int maxId);
+    List<PushRegistrationWrapper> getPushRegistrationByType(PushType pushType, int prevMaxId);
 
     public void insertCovidCert(DbCovidCert covidCert);
 }
