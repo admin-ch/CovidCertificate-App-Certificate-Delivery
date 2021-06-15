@@ -105,8 +105,12 @@ public class AppController {
     public ResponseEntity<Void> covidCertDeliveryComplete(
             @Valid @RequestBody RequestDeliveryPayload payload)
             throws CodeNotFoundException, InvalidSignatureException {
-        signatureValidator.validate(payload.getSignaturePayload(), payload.getSignature());
-        deliveryDataService.closeTransfer(payload.getCode());
+        try {
+            signatureValidator.validate(payload.getSignaturePayload(), payload.getSignature());
+            deliveryDataService.closeTransfer(payload.getCode());
+        } catch (Exception e) {
+            // do nothing. best effort only.
+        }
         return ResponseEntity.ok().build();
     }
 
