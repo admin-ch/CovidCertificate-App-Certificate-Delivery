@@ -2,6 +2,7 @@ package ch.admin.bag.covidcertificate.backend.delivery.data;
 
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeAlreadyExistsException;
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeNotFoundException;
+import ch.admin.bag.covidcertificate.backend.delivery.data.impl.PushRegistrationWrapper;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistration;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration;
@@ -11,7 +12,6 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
 import java.time.Instant;
 import java.util.List;
-import org.springframework.transaction.annotation.Transactional;
 
 public interface DeliveryDataService {
     public void initTransfer(DeliveryRegistration registration) throws CodeAlreadyExistsException;
@@ -32,7 +32,7 @@ public interface DeliveryDataService {
 
     void removeRegistrations(List<String> tokensToRemove);
 
-    List<PushRegistration> getPushRegistrationByType(PushType pushType);
+    List<PushRegistrationWrapper> getPushRegistrationByType(PushType pushType, int maxId);
 
     public void insertCovidCert(DbCovidCert covidCert);
 }

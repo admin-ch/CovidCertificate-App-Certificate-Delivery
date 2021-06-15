@@ -27,8 +27,9 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
     private final SimpleJdbcInsert transferInsert;
     private final SimpleJdbcInsert pushRegistrationInsert;
     private final SimpleJdbcInsert covidCertInsert;
+    private final int batchSize;
 
-    public JdbcDeliveryDataServiceImpl(DataSource dataSource) {
+    public JdbcDeliveryDataServiceImpl(DataSource dataSource, int batchSize) {
         this.jt = new NamedParameterJdbcTemplate(dataSource);
         this.transferInsert =
                 new SimpleJdbcInsert(dataSource)
@@ -42,6 +43,7 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
                 new SimpleJdbcInsert(dataSource)
                         .withTableName("t_covidcert")
                         .usingGeneratedKeyColumns("pk_covidcert_id", "created_at");
+        this.batchSize = batchSize;
     }
 
     @Override
@@ -155,9 +157,13 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<PushRegistration> getPushRegistrationByType(final PushType pushType) {
-        final var sql = "select * from t_push_registration where push_type = :push_type";
+    public List<PushRegistrationWrapper> getPushRegistrationByType(
+            final PushType pushType, int prevMaxId) {
+        final var sql =
+                "select * from t_push_registration where push_type = :push_type and pk_push_registration_id > :max_id limit :batch_size";
         final var params = new MapSqlParameterSource("push_type", pushType.name());
+        params.addValue("max_id", prevMaxId);
+        params.addValue("batch_size", batchSize);
         return jt.query(sql, params, new PushRegistrationRowMapper());
     }
 

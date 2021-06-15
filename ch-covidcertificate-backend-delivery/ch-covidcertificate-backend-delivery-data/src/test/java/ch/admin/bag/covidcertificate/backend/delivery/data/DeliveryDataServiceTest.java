@@ -20,6 +20,7 @@ import ch.admin.bag.covidcertificate.backend.delivery.data.config.PostgresDataCo
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeAlreadyExistsException;
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeNotFoundException;
 import ch.admin.bag.covidcertificate.backend.delivery.data.util.CodeGenerator;
+import ch.admin.bag.covidcertificate.backend.delivery.data.impl.PushRegistrationWrapper;
 import ch.admin.bag.covidcertificate.backend.delivery.data.util.PostgresDbCleaner;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
@@ -111,18 +112,18 @@ public class DeliveryDataServiceTest {
         deliveryDataService.insertPushRegistration(pushRegistration);
 
         // check push registration added
-        List<PushRegistration> pushRegistrations =
-                deliveryDataService.getPushRegistrationByType(PushType.IOS);
+        List<PushRegistrationWrapper> pushRegistrations =
+                deliveryDataService.getPushRegistrationByType(PushType.IOS, 0);
         assertEquals(1, pushRegistrations.size());
-        assertPushRegistration(pushRegistration, pushRegistrations.get(0));
+        assertPushRegistration(pushRegistration, pushRegistrations.get(0).getPushRegistration());
 
         // insert same push registration again
         deliveryDataService.insertPushRegistration(pushRegistration);
 
         // check no change
-        pushRegistrations = deliveryDataService.getPushRegistrationByType(PushType.IOS);
+        pushRegistrations = deliveryDataService.getPushRegistrationByType(PushType.IOS, 0);
         assertEquals(1, pushRegistrations.size());
-        assertPushRegistration(pushRegistration, pushRegistrations.get(0));
+        assertPushRegistration(pushRegistration, pushRegistrations.get(0).getPushRegistration());
 
         // insert another push registration
         PushRegistration anotherPushRegistration = new PushRegistration();
@@ -131,16 +132,21 @@ public class DeliveryDataServiceTest {
         deliveryDataService.insertPushRegistration(anotherPushRegistration);
 
         // check push registration added
-        pushRegistrations = deliveryDataService.getPushRegistrationByType(PushType.IOS);
+        pushRegistrations = deliveryDataService.getPushRegistrationByType(PushType.IOS, 0);
         assertEquals(2, pushRegistrations.size());
 
         // remove push registration
         deliveryDataService.removeRegistrations(List.of(pushRegistration.getPushToken()));
 
         // check push registration removed
-        pushRegistrations = deliveryDataService.getPushRegistrationByType(PushType.IOS);
+        pushRegistrations = deliveryDataService.getPushRegistrationByType(PushType.IOS, 0);
         assertEquals(1, pushRegistrations.size());
-        assertPushRegistration(anotherPushRegistration, pushRegistrations.get(0));
+        assertPushRegistration(
+                anotherPushRegistration, pushRegistrations.get(0).getPushRegistration());
+
+        // check push registration pk_id
+        pushRegistrations = deliveryDataService.getPushRegistrationByType(PushType.IOS, 100);
+        assertTrue(pushRegistrations.isEmpty());
     }
 
     private void assertPushRegistration(PushRegistration expected, PushRegistration actual) {
