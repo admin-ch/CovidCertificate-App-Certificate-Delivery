@@ -124,7 +124,8 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
     }
 
     @Bean
-    public CgsController cgsController(DeliveryDataService deliveryDataService) {
-        return new CgsController(deliveryDataService);
+    public CgsController cgsController(
+            DeliveryDataService deliveryDataService, Crypto ecCrypto, Crypto rsaCrypto) {
+        return new CgsController(deliveryDataService, ecCrypto, rsaCrypto);
     }
 }

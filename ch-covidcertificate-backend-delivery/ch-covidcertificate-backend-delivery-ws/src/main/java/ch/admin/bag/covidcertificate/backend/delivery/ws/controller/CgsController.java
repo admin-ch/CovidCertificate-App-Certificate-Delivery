@@ -12,11 +12,24 @@ package ch.admin.bag.covidcertificate.backend.delivery.ws.controller;
 
 import ch.admin.bag.covidcertificate.backend.delivery.data.DeliveryDataService;
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeNotFoundException;
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
 import ch.admin.bag.covidcertificate.backend.delivery.model.cgs.CgsCovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.security.encryption.Crypto;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidPublicKeyException;
 import ch.ubique.openapi.docannotations.Documentation;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.InvalidParameterSpecException;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -34,10 +47,17 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @RequestMapping("/cgs/delivery/v1")
 public class CgsController {
 
-    private final DeliveryDataService deliveryDataService;
+    private static final Logger logger = LoggerFactory.getLogger(CgsController.class);
 
-    public CgsController(DeliveryDataService deliveryDataService) {
+    private final DeliveryDataService deliveryDataService;
+    private final Crypto ecCrypto;
+    private final Crypto rsaCrypto;
+
+    public CgsController(
+            DeliveryDataService deliveryDataService, Crypto ecCrypto, Crypto rsaCrypto) {
         this.deliveryDataService = deliveryDataService;
+        this.ecCrypto = ecCrypto;
+        this.rsaCrypto = rsaCrypto;
     }
 
     @Documentation(
@@ -59,23 +79,47 @@ public class CgsController {
     @CrossOrigin(origins = {"https://editor.swagger.io"})
     @PostMapping(value = "/covidcert")
     public ResponseEntity<Void> addCovidCert(@Valid @RequestBody CgsCovidCert covidCert)
-            throws CodeNotFoundException {
+            throws CodeNotFoundException, InvalidPublicKeyException,
+                    InvalidAlgorithmParameterException, NoSuchPaddingException,
+                    IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException,
+                    InvalidKeySpecException, InvalidParameterSpecException, InvalidKeyException {
         deliveryDataService.insertCovidCert(mapAndEncrypt(covidCert));
         return ResponseEntity.ok().build();
     }
 
-    private DbCovidCert mapAndEncrypt(CgsCovidCert covidCert) throws CodeNotFoundException {
+    private DbCovidCert mapAndEncrypt(CgsCovidCert covidCert)
+            throws CodeNotFoundException, InvalidPublicKeyException,
+                    InvalidAlgorithmParameterException, NoSuchPaddingException,
+                    IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException,
+                    InvalidKeySpecException, InvalidParameterSpecException, InvalidKeyException {
         DbCovidCert dbCovidCert = new DbCovidCert();
         DbTransfer transfer = deliveryDataService.findTransfer(covidCert.getCode());
         dbCovidCert.setFkTransfer(transfer.getPk());
         String publicKey = transfer.getPublicKey();
-        dbCovidCert.setEncryptedHcert(encrypt(covidCert.getHcert(), publicKey));
-        dbCovidCert.setEncryptedPdf(encrypt(covidCert.getPdf(), publicKey));
+        Algorithm algorithm = transfer.getAlgorithm();
+        dbCovidCert.setEncryptedHcert(encrypt(covidCert.getHcert(), publicKey, algorithm));
+        dbCovidCert.setEncryptedPdf(encrypt(covidCert.getPdf(), publicKey, algorithm));
         return dbCovidCert;
     }
 
-    private String encrypt(String toEncrypt, String publicKey) {
-        return null; // TODO
+    private String encrypt(String toEncrypt, String publicKey, Algorithm algorithm)
+            throws InvalidPublicKeyException, InvalidAlgorithmParameterException,
+                    NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException,
+                    BadPaddingException, InvalidKeySpecException, InvalidParameterSpecException,
+                    InvalidKeyException {
+        Crypto crypto;
+        switch (algorithm) {
+            case EC256:
+                crypto = ecCrypto;
+                break;
+            case RSA2048:
+                crypto = rsaCrypto;
+                break;
+            default:
+                logger.error("unexpected algorithm: {}", algorithm);
+                throw new InvalidPublicKeyException();
+        }
+        return crypto.encrypt(toEncrypt, publicKey);
     }
 
     @ExceptionHandler({CodeNotFoundException.class})
