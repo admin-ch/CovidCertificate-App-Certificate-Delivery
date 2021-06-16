@@ -46,10 +46,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public abstract class WsBaseConfig implements WebMvcConfigurer {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
+
     @Value("${ws.jws.p12:}")
     public String p12KeyStore;
+
     @Value("${ws.jws.password:}")
     public String p12KeyStorePassword;
+
     @Value(
             "#{${ws.security.headers: {'X-Content-Type-Options':'nosniff', 'X-Frame-Options':'DENY','X-Xss-Protection':'1; mode=block'}}}")
     Map<String, String> additionalHeaders;
@@ -65,6 +68,9 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
 
     @Value("${push.ios.topic}")
     private String iosPushTopic;
+
+    @Value("${push.batchsize}")
+    private long batchSize;
 
     public abstract DataSource dataSource();
 
@@ -110,7 +116,7 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
 
     @Bean
     public DeliveryDataService deliveryDataService(DataSource dataSource) {
-        return new JdbcDeliveryDataServiceImpl(dataSource, 0);
+        return new JdbcDeliveryDataServiceImpl(dataSource, batchSize);
     }
 
     @Bean
