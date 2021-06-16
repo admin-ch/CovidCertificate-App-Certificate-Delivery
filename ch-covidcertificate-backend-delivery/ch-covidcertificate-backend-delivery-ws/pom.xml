@@ -156,9 +156,9 @@
                     </controllers>
                     <description>CH Covidcertificate Delivery API</description>
                     <apiUrls>
-                        <apiUrl>https://www.cc-d.bit.admin.ch</apiUrl>
-                        <apiUrl>https://www.cc-a.bit.admin.ch</apiUrl>
-                        <apiUrl>https://www.cc.bit.admin.ch</apiUrl>
+                        <apiUrl>https://covidcertificate-app-d.bit.admin.ch</apiUrl>
+                        <apiUrl>https://covidcertificate-app-a.bit.admin.ch</apiUrl>
+                        <apiUrl>https://covidcertificate-app.bit.admin.ch</apiUrl>
                     </apiUrls>
                     <title>CH Covidcertificate Delivery API</title>
                 </configuration>
