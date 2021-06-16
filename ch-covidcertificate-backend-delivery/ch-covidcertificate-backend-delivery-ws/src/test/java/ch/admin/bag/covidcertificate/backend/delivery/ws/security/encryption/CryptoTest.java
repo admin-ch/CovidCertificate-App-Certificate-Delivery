@@ -2,18 +2,22 @@ package ch.admin.bag.covidcertificate.backend.delivery.ws.security.encryption;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import ch.admin.bag.covidcertificate.backend.delivery.ws.security.Action;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidSignatureException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
+import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.spec.ECPoint;
-import java.security.spec.ECPublicKeySpec;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.InvalidParameterSpecException;
 import java.security.spec.RSAPublicKeySpec;
-import java.util.Arrays;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.Test;
 
 public class CryptoTest {
@@ -66,6 +70,47 @@ public class CryptoTest {
         System.out.println(crypto.encrypt("this is a test (rsa)", RSA_TEST_PUB_KEY));
     }
 
+    private static final String CODE = "A7KBZ91XL";
+
+    @Test
+    public void signEcTest() throws Exception {
+        Signature sig = Signature.getInstance("SHA256withECDSA");
+        KeyPair ecKeyPair = CryptoHelper.createEcKeyPair();
+        sig.initSign(ecKeyPair.getPrivate());
+
+        printSignaturePayloadsAndSignatures(sig, CODE);
+
+        System.out.println(CryptoHelper.getEcPubKeyUncompressedOctal(ecKeyPair.getPublic()));
+    }
+
+    @Test
+    public void signRsaTest() throws Exception {
+        Signature sig = Signature.getInstance("SHA256withRSA/PSS", new BouncyCastleProvider());
+        KeyPair rsaKeyPair = CryptoHelper.createRsaKeyPair();
+        sig.initSign(rsaKeyPair.getPrivate());
+
+        printSignaturePayloadsAndSignatures(sig, CODE);
+
+        System.out.println(Base64.getEncoder().encodeToString(rsaKeyPair.getPublic().getEncoded()));
+    }
+
+    private void printSignaturePayloadsAndSignatures(Signature sig, String code)
+            throws SignatureException {
+        List<String> signaturePayloads = new ArrayList<>();
+        for (Action action : Action.values()) {
+            signaturePayloads.add(action.name() + ":" + code + ":" + Instant.now().toEpochMilli());
+        }
+
+        for (String signaturePayload : signaturePayloads) {
+            sig.update(signaturePayload.getBytes(StandardCharsets.UTF_8));
+            byte[] signatureBytes = sig.sign();
+            String signature = Base64.getEncoder().encodeToString(signatureBytes);
+            System.out.println(signaturePayload);
+            System.out.println(signature);
+            System.out.println("---------------------------------------------------------");
+        }
+    }
+
     private String getTestRsaPublicKey() throws NoSuchAlgorithmException, InvalidKeySpecException {
         var modulos =
                 "AKs5SqKfU4rbWCU03q5JqvPKBCbl5fXcDKXlHqz0XypIXaRw3TxhakR9GdBRtAQv1Cqob3WvOkyaf484NCX+Gcarntw05GSbiv4mAWenxPeT17mfasqtRxQ8LcqNpoZ/DtxIECLa7lwfM8qxQ3ZS4OAfccuwSjTQFC4VE/c4+ELIwrDXo1ixzoFw5fB1a+OWP7qxfUKF1ty2g+IhT7ZX9HOYHB1o9CW2NTvQvkYOY7/b0i6BKy+gPMB8m29J503nJDqG6LvGY5SPkTebD/2EybmxjoeKmg4PCMVUDN3lSlxUhHegZA1fG/NSGuA1uuN2cJhCRlahQFOFotnDre2Q+hc=";
@@ -77,23 +122,5 @@ public class CryptoTest {
                         new BigInteger(Base64.getDecoder().decode(exponent)));
         KeyFactory kf = KeyFactory.getInstance("RSA");
         return Base64.getEncoder().encodeToString(kf.generatePublic(publicKeySpec).getEncoded());
-    }
-
-    private PublicKey getEcPublicKey(String publicKey)
-            throws NoSuchAlgorithmException, InvalidParameterSpecException,
-                    InvalidKeySpecException {
-        // the ios public key...
-        var publicKeyBytes = Base64.getDecoder().decode(publicKey);
-
-        // ... is in uncompressed octal represenation (0x04 | X | Y)
-        var x = Arrays.copyOfRange(publicKeyBytes, 1, 33);
-        var y = Arrays.copyOfRange(publicKeyBytes, 33, publicKeyBytes.length);
-
-        KeyFactory kf = KeyFactory.getInstance("EC");
-        var ecKeySpec =
-                new ECPublicKeySpec(
-                        new ECPoint(new BigInteger(1, x), new BigInteger(1, y)),
-                        EcCrypto.ecParameterSpecForCurve(EcCrypto.SECP256R1));
-        return kf.generatePublic(ecKeySpec);
     }
 }
