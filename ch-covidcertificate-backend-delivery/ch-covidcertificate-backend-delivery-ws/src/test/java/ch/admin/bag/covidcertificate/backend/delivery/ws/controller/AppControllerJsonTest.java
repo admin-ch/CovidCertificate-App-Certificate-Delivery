@@ -10,6 +10,7 @@
 
 package ch.admin.bag.covidcertificate.backend.delivery.ws.controller;
 
+import java.security.NoSuchAlgorithmException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
@@ -29,7 +30,8 @@ import org.springframework.test.context.ActiveProfiles;
 public class AppControllerJsonTest extends AppControllerTest {
 
     @BeforeAll
-    public void setup() {
+    public void setup() throws NoSuchAlgorithmException {
+        super.setup();
         this.acceptMediaType = MediaType.APPLICATION_JSON;
     }
 }

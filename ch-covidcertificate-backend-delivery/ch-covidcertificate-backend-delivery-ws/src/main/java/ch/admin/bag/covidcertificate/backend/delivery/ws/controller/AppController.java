@@ -90,13 +90,13 @@ public class AppController {
             @Valid @RequestBody DeliveryRegistration registration)
             throws CodeAlreadyExistsException, InvalidSignatureException, InvalidActionException,
                     InvalidSignaturePayloadException, InvalidPublicKeyException {
-        signaturePayloadValidator.validate(
-                registration.getSignaturePayload(), Action.REGISTER, registration.getCode());
         validateSignature(
                 registration.getPublicKey(),
                 registration.getAlgorithm(),
                 registration.getSignaturePayload(),
                 registration.getSignature());
+        signaturePayloadValidator.validate(
+                registration.getSignaturePayload(), Action.REGISTER, registration.getCode());
         deliveryDataService.initTransfer(registration);
         return ResponseEntity.ok().build();
     }
@@ -114,9 +114,9 @@ public class AppController {
             @Valid @RequestBody RequestDeliveryPayload payload)
             throws CodeNotFoundException, InvalidSignatureException, InvalidActionException,
                     InvalidSignaturePayloadException, InvalidPublicKeyException {
+        validateSignature(payload.getCode(), payload.getSignaturePayload(), payload.getSignature());
         signaturePayloadValidator.validate(
                 payload.getSignaturePayload(), Action.GET, payload.getCode());
-        validateSignature(payload.getCode(), payload.getSignaturePayload(), payload.getSignature());
         List<CovidCert> covidCerts = deliveryDataService.findCovidCerts(payload.getCode());
         return ResponseEntity.ok(new CovidCertDelivery(covidCerts));
     }
@@ -133,10 +133,10 @@ public class AppController {
     public ResponseEntity<Void> covidCertDeliveryComplete(
             @Valid @RequestBody RequestDeliveryPayload payload) {
         try {
-            signaturePayloadValidator.validate(
-                    payload.getSignaturePayload(), Action.DELETE, payload.getCode());
             validateSignature(
                     payload.getCode(), payload.getSignaturePayload(), payload.getSignature());
+            signaturePayloadValidator.validate(
+                    payload.getSignaturePayload(), Action.DELETE, payload.getCode());
             deliveryDataService.closeTransfer(payload.getCode());
         } catch (Exception e) {
             // do nothing. best effort only.

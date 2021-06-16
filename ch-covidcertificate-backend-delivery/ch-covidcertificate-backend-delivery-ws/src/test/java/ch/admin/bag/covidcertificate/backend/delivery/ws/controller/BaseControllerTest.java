@@ -62,6 +62,14 @@ public abstract class BaseControllerTest {
         }
     }
 
+    public String asJsonString(Object obj) {
+        try {
+            return this.objectMapper.writeValueAsString(obj);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Test
     public void testSecurityHeaders() throws Exception {
         final MockHttpServletResponse response =
