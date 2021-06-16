@@ -1,5 +1,6 @@
 package ch.admin.bag.covidcertificate.backend.delivery.model.db;
 
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
 import java.time.Instant;
 
 public class DbTransfer {
@@ -7,6 +8,7 @@ public class DbTransfer {
     private Instant createdAt;
     private String code;
     private String publicKey;
+    private Algorithm algorithm;
 
     public Integer getPk() {
         return pk;
@@ -38,5 +40,13 @@ public class DbTransfer {
 
     public void setPublicKey(String publicKey) {
         this.publicKey = publicKey;
+    }
+
+    public Algorithm getAlgorithm() {
+        return algorithm;
+    }
+
+    public void setAlgorithm(Algorithm algorithm) {
+        this.algorithm = algorithm;
     }
 }

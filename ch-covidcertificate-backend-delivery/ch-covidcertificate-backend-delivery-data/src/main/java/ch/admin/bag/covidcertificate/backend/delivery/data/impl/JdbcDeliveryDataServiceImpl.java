@@ -161,6 +161,7 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("code", registration.getCode());
         params.addValue("public_key", registration.getPublicKey());
+        params.addValue("algorithm", registration.getAlgorithm().name());
         return params;
     }
 

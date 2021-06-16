@@ -60,7 +60,10 @@ public class AppController {
             description = "delivery registration endpoint",
             responses = {
                 "200 => registration for delivery successful",
-                "409 => code collision. retry register with different code"
+                "400 => invalid public key",
+                "403 => invalid signature",
+                "406 => invalid action",
+                "409 => code collision. retry register with different code",
             })
     @CrossOrigin(origins = {"https://editor.swagger.io"})
     @PostMapping(value = "/covidcert/register")

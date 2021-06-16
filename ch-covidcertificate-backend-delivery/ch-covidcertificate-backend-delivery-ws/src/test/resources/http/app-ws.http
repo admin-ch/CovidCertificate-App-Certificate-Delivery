@@ -10,6 +10,7 @@ Content-Type: application/json
 {
   "code": "A7KBZ91XL",
   "publicKey": "base64string",
+  "algorithm": "ES256",
   "signature": "base64string",
   "signaturePayload": "register:A7KBZ91XL:1623051081000"
 }

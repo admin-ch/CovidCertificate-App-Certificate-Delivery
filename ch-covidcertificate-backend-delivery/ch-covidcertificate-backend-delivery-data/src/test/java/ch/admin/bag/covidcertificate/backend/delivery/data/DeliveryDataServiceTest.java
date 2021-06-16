@@ -20,6 +20,7 @@ import ch.admin.bag.covidcertificate.backend.delivery.data.config.PostgresDataCo
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeAlreadyExistsException;
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeNotFoundException;
 import ch.admin.bag.covidcertificate.backend.delivery.data.util.PostgresDbCleaner;
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistration;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration;
@@ -65,6 +66,7 @@ public class DeliveryDataServiceTest {
         DeliveryRegistration registration = new DeliveryRegistration();
         registration.setCode(code);
         registration.setPublicKey(PUBLIC_KEY);
+        registration.setAlgorithm(Algorithm.EC256);
         return registration;
     }
 
