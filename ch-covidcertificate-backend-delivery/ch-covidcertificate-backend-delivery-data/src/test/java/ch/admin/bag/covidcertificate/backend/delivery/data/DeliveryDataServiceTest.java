@@ -29,6 +29,8 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -44,6 +46,7 @@ public class DeliveryDataServiceTest {
 
     public static final String CODE = "1A2B3C4D5";
     public static final String PUBLIC_KEY = "public_key";
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
     @Autowired private DeliveryDataService deliveryDataService;
 
     @Test
@@ -160,6 +163,7 @@ public class DeliveryDataServiceTest {
         do {
             registrationWrapperList =
                     deliveryDataService.getPushRegistrationByType(PushType.IOS, maxId);
+            logger.debug("Size of returned batch: {}", registrationWrapperList.size());
             assertTrue(registrationWrapperList.size() <= 2);
             for (PushRegistrationWrapper wrapper : registrationWrapperList) {
                 final var id = wrapper.getId();
