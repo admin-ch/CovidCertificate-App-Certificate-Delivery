@@ -2,6 +2,7 @@ package ch.admin.bag.covidcertificate.backend.delivery.ws.security.encryption;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.Action;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidSignatureException;
 import java.math.BigInteger;
@@ -14,9 +15,7 @@ import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Base64;
-import java.util.List;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.Test;
 
@@ -78,9 +77,8 @@ public class CryptoTest {
         KeyPair ecKeyPair = CryptoHelper.createEcKeyPair();
         sig.initSign(ecKeyPair.getPrivate());
 
-        printSignaturePayloadsAndSignatures(sig, CODE);
-
-        System.out.println(CryptoHelper.getEcPubKeyUncompressedOctal(ecKeyPair.getPublic()));
+        String pubKey = CryptoHelper.getEcPubKeyUncompressedOctal(ecKeyPair.getPublic());
+        printPayloads(sig, CODE, pubKey, Algorithm.EC256);
     }
 
     @Test
@@ -89,25 +87,45 @@ public class CryptoTest {
         KeyPair rsaKeyPair = CryptoHelper.createRsaKeyPair();
         sig.initSign(rsaKeyPair.getPrivate());
 
-        printSignaturePayloadsAndSignatures(sig, CODE);
-
-        System.out.println(Base64.getEncoder().encodeToString(rsaKeyPair.getPublic().getEncoded()));
+        String pubKey = Base64.getEncoder().encodeToString(rsaKeyPair.getPublic().getEncoded());
+        printPayloads(sig, CODE, pubKey, Algorithm.RSA2048);
     }
 
-    private void printSignaturePayloadsAndSignatures(Signature sig, String code)
+    private void printPayloads(Signature sig, String code, String pubKey, Algorithm algorithm)
             throws SignatureException {
-        List<String> signaturePayloads = new ArrayList<>();
         for (Action action : Action.values()) {
-            signaturePayloads.add(action.name() + ":" + code + ":" + Instant.now().toEpochMilli());
-        }
-
-        for (String signaturePayload : signaturePayloads) {
+            String signaturePayload =
+                    (action.name() + ":" + code + ":" + Instant.now().toEpochMilli());
             sig.update(signaturePayload.getBytes(StandardCharsets.UTF_8));
             byte[] signatureBytes = sig.sign();
             String signature = Base64.getEncoder().encodeToString(signatureBytes);
-            System.out.println(signaturePayload);
-            System.out.println(signature);
-            System.out.println("---------------------------------------------------------");
+
+            if (Action.REGISTER.equals(action)) {
+                System.out.println(
+                        String.format(
+                                "{\n"
+                                        + "  \"code\": \"%s\",\n"
+                                        + "  \"publicKey\": \"%s\",\n"
+                                        + "  \"algorithm\": \"%s\",\n"
+                                        + "  \"signature\": \"%s\",\n"
+                                        + "  \"signaturePayload\": \"%s\"\n"
+                                        + "}",
+                                code,
+                                pubKey,
+                                algorithm,
+                                signature,
+                                signaturePayload));
+            } else {
+                System.out.println(
+                        String.format(
+                                "{"
+                                        + "  \"code\": \"%s\",\n"
+                                        + "  \"signature\": \"%s\",\n"
+                                        + "  \"signaturePayload\": \"%s\"\n"
+                                        + "}",
+                                code, signature, signaturePayload));
+            }
+                System.out.println("---------------------------------------------------------");
         }
     }
 

@@ -11,7 +11,7 @@ public class CgsCovidCert {
     @NotNull
     private String code;
 
-    @Documentation(description = "covidcert hcert. HC1:<base64>")
+    @Documentation(description = "covidcert hcert. HC1:<base45>")
     @NotNull
     private String hcert;
 

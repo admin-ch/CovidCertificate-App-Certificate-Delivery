@@ -50,10 +50,10 @@ public class AppController {
 
     private static final Logger logger = LoggerFactory.getLogger(AppController.class);
 
-    private final DeliveryDataService deliveryDataService;
+    protected final DeliveryDataService deliveryDataService;
     private final SignaturePayloadValidator signaturePayloadValidator;
-    private final Crypto ecCrypto;
-    private final Crypto rsaCrypto;
+    protected final Crypto ecCrypto;
+    protected final Crypto rsaCrypto;
 
     public AppController(
             DeliveryDataService deliveryDataService,
