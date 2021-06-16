@@ -149,6 +149,31 @@ public class DeliveryDataServiceTest {
         assertTrue(pushRegistrations.isEmpty());
     }
 
+    @Test
+    public void testPushRegistrationOrdering() {
+        for (var i = 0; i < 20; i++) {
+            PushRegistration pushRegistration = new PushRegistration();
+            String pushToken = "push_token_" + i;
+            pushRegistration.setPushToken(pushToken);
+            pushRegistration.setPushType(PushType.IOS);
+            deliveryDataService.insertPushRegistration(pushRegistration);
+        }
+        var maxId = 0;
+        List<PushRegistrationWrapper> registrationWrapperList;
+        do {
+            registrationWrapperList =
+                    deliveryDataService.getPushRegistrationByType(PushType.IOS, maxId);
+            assertTrue(registrationWrapperList.size() <= 2);
+            for (PushRegistrationWrapper wrapper : registrationWrapperList) {
+                final var id = wrapper.getId();
+                assertTrue(id == maxId + 1 || id == maxId + 2);
+                if (id > maxId) {
+                    maxId = id;
+                }
+            }
+        } while (!registrationWrapperList.isEmpty());
+    }
+
     private void assertPushRegistration(PushRegistration expected, PushRegistration actual) {
         assertEquals(expected.getPushToken(), actual.getPushToken());
         assertEquals(expected.getPushType(), actual.getPushType());
