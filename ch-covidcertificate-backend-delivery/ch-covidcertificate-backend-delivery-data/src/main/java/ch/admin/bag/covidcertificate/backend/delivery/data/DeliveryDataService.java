@@ -12,6 +12,8 @@ import java.util.List;
 public interface DeliveryDataService {
     public void initTransfer(DeliveryRegistration registration) throws CodeAlreadyExistsException;
 
+    boolean transferCodeExists(String code);
+
     public List<CovidCert> findCovidCerts(String code) throws CodeNotFoundException;
 
     public Integer findPkTransferId(String code) throws CodeNotFoundException;

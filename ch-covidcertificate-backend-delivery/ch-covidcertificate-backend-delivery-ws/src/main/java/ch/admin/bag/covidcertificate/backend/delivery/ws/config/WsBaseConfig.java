@@ -15,7 +15,10 @@ import ch.admin.bag.covidcertificate.backend.delivery.data.impl.JdbcDeliveryData
 import ch.admin.bag.covidcertificate.backend.delivery.ws.controller.AppController;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.controller.CgsController;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.interceptor.HeaderInjector;
-import ch.admin.bag.covidcertificate.backend.delivery.ws.security.SignatureValidator;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.security.SignaturePayloadValidator;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.security.encryption.Crypto;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.security.encryption.EcCrypto;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.security.encryption.RsaCrypto;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.signature.JwsMessageConverter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -91,8 +94,8 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
     }
 
     @Bean
-    public SignatureValidator signatureValidator() {
-        return new SignatureValidator();
+    public SignaturePayloadValidator signatureValidator() {
+        return new SignaturePayloadValidator();
     }
 
     @Bean
@@ -101,9 +104,23 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
     }
 
     @Bean
+    public Crypto ecCrypto() {
+        return new EcCrypto();
+    }
+
+    @Bean
+    public Crypto rsaCrypto() {
+        return new RsaCrypto();
+    }
+
+    @Bean
     public AppController appController(
-            DeliveryDataService deliveryDataService, SignatureValidator signatureValidator) {
-        return new AppController(deliveryDataService, signatureValidator);
+            DeliveryDataService deliveryDataService,
+            SignaturePayloadValidator signaturePayloadValidator,
+            Crypto ecCrypto,
+            Crypto rsaCrypto) {
+        return new AppController(
+                deliveryDataService, signaturePayloadValidator, ecCrypto, rsaCrypto);
     }
 
     @Bean

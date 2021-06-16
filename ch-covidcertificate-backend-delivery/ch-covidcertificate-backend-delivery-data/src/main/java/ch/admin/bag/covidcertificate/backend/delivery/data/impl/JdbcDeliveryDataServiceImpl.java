@@ -51,7 +51,9 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
         }
     }
 
-    private boolean transferCodeExists(String code) {
+    @Override
+    @Transactional(readOnly = true)
+    public boolean transferCodeExists(String code) {
         return jt.queryForObject(
                 "select exists(" + "select * from t_transfer" + " where code = :code" + ")",
                 new MapSqlParameterSource("code", code),
