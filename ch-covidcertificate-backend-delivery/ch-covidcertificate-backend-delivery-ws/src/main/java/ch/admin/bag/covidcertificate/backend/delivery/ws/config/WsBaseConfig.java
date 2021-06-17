@@ -70,7 +70,7 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
     private String iosPushTopic;
 
     @Value("${push.batchsize}")
-    private long batchSize;
+    private int batchSize;
 
     public abstract DataSource dataSource();
 
