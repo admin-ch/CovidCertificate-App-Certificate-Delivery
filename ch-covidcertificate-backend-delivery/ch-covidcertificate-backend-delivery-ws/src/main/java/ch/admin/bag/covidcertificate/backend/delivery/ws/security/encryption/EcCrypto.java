@@ -27,12 +27,9 @@ import javax.crypto.KeyAgreement;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class EcCrypto extends Crypto {
 
-    private static final Logger logger = LoggerFactory.getLogger(EcCrypto.class);
     public static final String SECP256R1 = "secp256r1";
 
     @Override

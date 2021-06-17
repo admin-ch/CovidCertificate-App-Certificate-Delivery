@@ -19,12 +19,8 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class RsaCrypto extends Crypto {
-
-    private static final Logger logger = LoggerFactory.getLogger(RsaCrypto.class);
 
     @Override
     public String encrypt(String toEncrypt, String publicKey)
