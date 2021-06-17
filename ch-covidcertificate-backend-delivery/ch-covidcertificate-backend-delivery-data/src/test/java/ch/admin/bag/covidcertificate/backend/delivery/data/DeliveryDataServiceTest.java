@@ -159,7 +159,6 @@ class DeliveryDataServiceTest {
 
     @Test
     void testPushRegistrationOrdering() {
-        // TODO Write similar to silent push
         for (var i = 0; i < 20; i++) {
             PushRegistration pushRegistration = new PushRegistration();
             String pushToken = "push_token_" + i;
