@@ -11,6 +11,8 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistra
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import javax.sql.DataSource;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -94,6 +96,19 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
         } catch (EmptyResultDataAccessException e) {
             throw new CodeNotFoundException();
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DbTransfer> findTransferWithoutCovidCert(Instant createdBefore) {
+        String sql =
+                "select * from t_transfer"
+                        + " where pk_transfer_id not in (select fk_transfer_id from t_covidcert)"
+                        + " and created_at < :created_before";
+        return jt.query(
+                sql,
+                new MapSqlParameterSource("created_before", Date.from(createdBefore)),
+                new TransferRowMapper());
     }
 
     @Override
