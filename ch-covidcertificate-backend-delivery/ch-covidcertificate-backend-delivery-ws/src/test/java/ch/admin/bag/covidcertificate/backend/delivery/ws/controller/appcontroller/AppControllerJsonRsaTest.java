@@ -12,6 +12,7 @@ package ch.admin.bag.covidcertificate.backend.delivery.ws.controller.appcontroll
 
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
 import java.security.NoSuchAlgorithmException;
+import java.sql.SQLException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
@@ -31,7 +32,7 @@ import org.springframework.test.context.ActiveProfiles;
 public class AppControllerJsonRsaTest extends AppControllerTest {
 
     @BeforeAll
-    public void setup() throws NoSuchAlgorithmException {
+    public void setup() throws NoSuchAlgorithmException, SQLException {
         super.setup();
         this.acceptMediaType = MediaType.APPLICATION_JSON;
         this.algorithm = Algorithm.RSA2048;

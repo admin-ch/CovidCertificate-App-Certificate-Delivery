@@ -1,5 +1,6 @@
 package ch.admin.bag.covidcertificate.backend.delivery.ws.controller.appcontroller;
 
+import static ch.admin.bag.covidcertificate.backend.delivery.data.util.PostgresDbCleaner.cleanDatabase;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -16,17 +17,21 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
+import java.sql.SQLException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
+import javax.sql.DataSource;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 public abstract class AppControllerTest extends BaseControllerTest {
+    @Autowired private DataSource dataSource;
 
     protected MediaType acceptMediaType;
     protected Algorithm algorithm;
@@ -45,9 +50,10 @@ public abstract class AppControllerTest extends BaseControllerTest {
     protected KeyPair rsaKeyPair;
 
     @BeforeAll
-    public void setup() throws NoSuchAlgorithmException {
+    public void setup() throws NoSuchAlgorithmException, SQLException {
         this.ecKeyPair = CryptoHelper.createEcKeyPair();
         this.rsaKeyPair = CryptoHelper.createRsaKeyPair();
+        cleanDatabase(dataSource.getConnection());
     }
 
     @Test
@@ -311,8 +317,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
     }
 
     private String getSignaturePayload(Action action, String code, Instant instant) {
-        String signaturePayload = action.name() + ":" + code + ":" + instant.toEpochMilli();
-        return signaturePayload;
+        return action.name() + ":" + code + ":" + instant.toEpochMilli();
     }
 
     private String getSignatureForPayload(byte[] toSign, Algorithm algorithm) throws Exception {

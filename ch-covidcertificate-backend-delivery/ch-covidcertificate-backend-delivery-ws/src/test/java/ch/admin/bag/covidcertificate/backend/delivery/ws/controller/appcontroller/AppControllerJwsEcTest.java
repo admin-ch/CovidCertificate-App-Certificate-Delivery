@@ -13,6 +13,7 @@ package ch.admin.bag.covidcertificate.backend.delivery.ws.controller.appcontroll
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.signature.JwsMessageConverter;
 import java.security.NoSuchAlgorithmException;
+import java.sql.SQLException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
@@ -31,7 +32,7 @@ import org.springframework.test.context.ActiveProfiles;
 public class AppControllerJwsEcTest extends AppControllerTest {
 
     @BeforeAll
-    public void setup() throws NoSuchAlgorithmException {
+    public void setup() throws NoSuchAlgorithmException, SQLException {
         super.setup();
         this.acceptMediaType = JwsMessageConverter.JWS_MEDIA_TYPE;
         this.algorithm = Algorithm.EC256;
