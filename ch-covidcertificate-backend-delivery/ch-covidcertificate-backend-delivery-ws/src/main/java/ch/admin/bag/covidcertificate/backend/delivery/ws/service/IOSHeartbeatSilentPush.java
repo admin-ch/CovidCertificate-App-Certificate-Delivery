@@ -1,7 +1,7 @@
 package ch.admin.bag.covidcertificate.backend.delivery.ws.service;
 
 import ch.admin.bag.covidcertificate.backend.delivery.data.DeliveryDataService;
-import ch.admin.bag.covidcertificate.backend.delivery.data.impl.PushRegistrationWrapper;
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
 import com.eatthepath.pushy.apns.ApnsClient;
 import com.eatthepath.pushy.apns.ApnsClientBuilder;
@@ -94,37 +94,32 @@ public class IOSHeartbeatSilentPush {
     public void sendHeartbeats() {
         logger.info("Send iOS heartbeat push");
         logger.info("Load tokens from database batch-wise.");
-        var maxId = 0;
-
-        while (true) {
-            final var iodRegistrationWrappers =
-                    pushRegistrationDataService.getPushRegistrationByType(PushType.IOD, maxId);
-            final var iosRegistrationWrappers =
-                    pushRegistrationDataService.getPushRegistrationByType(PushType.IOS, maxId);
-            logger.info(
-                    "Found {} iOD and {} iOS push tokens.",
-                    iodRegistrationWrappers.size(),
-                    iosRegistrationWrappers.size());
-            if (!iodRegistrationWrappers.isEmpty() || !iosRegistrationWrappers.isEmpty()) {
-                Set<String> iodPushTokens = new HashSet<>();
-                maxId = getTokens(maxId, iodRegistrationWrappers, iodPushTokens);
-                Set<String> iosPushTokens = new HashSet<>();
-                maxId = getTokens(maxId, iosRegistrationWrappers, iosPushTokens);
-                sendPushNotificationsBatch(iodPushTokens, iosPushTokens);
-            } else {
-                break;
-            }
+        for (PushType pushType : PushType.values()) {
+            int maxId = 0, nextMaxId = 0;
+            List<PushRegistration> registrationList;
+            var done = false;
+            do {
+                done = true;
+                registrationList =
+                        pushRegistrationDataService.getPushRegistrationByType(pushType, maxId);
+                logger.info("Found {} {} push tokens", registrationList.size(), pushType.name());
+                if (!registrationList.isEmpty()) {
+                    done = false;
+                    Set<String> pushTokens = new HashSet<>();
+                    nextMaxId = getTokens(nextMaxId, registrationList, pushTokens);
+                    sendPushNotificationsBatch(pushTokens, pushType);
+                }
+                maxId = nextMaxId;
+            } while (!done);
         }
         logger.info("iOS hearbeat push done");
     }
 
     private int getTokens(
-            int maxId,
-            List<PushRegistrationWrapper> iodRegistrationWrappers,
-            Set<String> iodPushTokens) {
-        for (PushRegistrationWrapper pushRegistrationWrapper : iodRegistrationWrappers) {
-            iodPushTokens.add(pushRegistrationWrapper.getPushRegistration().getPushToken());
-            final var id = pushRegistrationWrapper.getId();
+            int maxId, List<PushRegistration> registrationWrappers, Set<String> pushTokens) {
+        for (PushRegistration pushRegistration : registrationWrappers) {
+            pushTokens.add(pushRegistration.getPushToken());
+            final var id = pushRegistration.getId();
             if (id > maxId) {
                 maxId = id;
             }
@@ -132,8 +127,7 @@ public class IOSHeartbeatSilentPush {
         return maxId;
     }
 
-    private void sendPushNotificationsBatch(Set<String> iodPushTokens, Set<String> iosPushTokens) {
-        final var appleIodPushData = createAppleSilentPushNotifications(iodPushTokens);
+    private void sendPushNotificationsBatch(Set<String> iosPushTokens, PushType pushType) {
         final var appleIosPushData = createAppleSilentPushNotifications(iosPushTokens);
 
         List<
@@ -141,16 +135,16 @@ public class IOSHeartbeatSilentPush {
                                 ApnsPushNotification,
                                 PushNotificationResponse<ApnsPushNotification>>>
                 responseList = new ArrayList<>();
+        ApnsClient client;
+        if (PushType.IOS.equals(pushType)) {
+            client = apnsClient;
+        } else {
+            client = apnsClientSandbox;
+        }
         for (ApnsPushNotification notification : appleIosPushData) {
             PushNotificationFuture<
                             ApnsPushNotification, PushNotificationResponse<ApnsPushNotification>>
-                    f = apnsClient.sendNotification(notification);
-            responseList.add(f);
-        }
-        for (ApnsPushNotification notification : appleIodPushData) {
-            PushNotificationFuture<
-                            ApnsPushNotification, PushNotificationResponse<ApnsPushNotification>>
-                    f = apnsClientSandbox.sendNotification(notification);
+                    f = client.sendNotification(notification);
             responseList.add(f);
         }
 

@@ -157,12 +157,10 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<PushRegistrationWrapper> getPushRegistrationByType(
+    public List<PushRegistration> getPushRegistrationByType(
             final PushType pushType, int prevMaxId) {
         final var sql =
-                "select * from "
-                        + "(select * from t_push_registration order by pk_push_registration_id asc) as t_push "
-                        + "where push_type = :push_type and pk_push_registration_id > :prev_max_id limit :batch_size";
+                "select * from t_push_registration where push_type = :push_type and pk_push_registration_id > :prev_max_id order by pk_push_registration_id asc limit :batch_size";
         final var params = new MapSqlParameterSource("push_type", pushType.name());
         params.addValue("prev_max_id", prevMaxId);
         params.addValue("batch_size", batchSize);

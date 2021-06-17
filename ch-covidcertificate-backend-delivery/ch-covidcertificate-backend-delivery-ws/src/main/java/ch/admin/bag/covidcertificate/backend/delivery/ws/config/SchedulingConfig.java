@@ -15,7 +15,7 @@ public class SchedulingConfig {
         this.iosHeartbeatSilentPush = iosHeartbeatSilentPush;
     }
 
-    @Scheduled(cron = "${push.ios.cron}")
+    @Scheduled(cron = "${push.ios.cron:0 0 0/2 ? * *}")
     public void iosHeartbeat() {
         iosHeartbeatSilentPush.sendHeartbeats();
     }
