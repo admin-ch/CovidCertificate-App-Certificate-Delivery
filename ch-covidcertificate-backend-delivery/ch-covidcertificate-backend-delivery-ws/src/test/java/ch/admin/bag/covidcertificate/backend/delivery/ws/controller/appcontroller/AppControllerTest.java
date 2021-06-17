@@ -1,6 +1,5 @@
 package ch.admin.bag.covidcertificate.backend.delivery.ws.controller.appcontroller;
 
-import static ch.admin.bag.covidcertificate.backend.delivery.data.util.PostgresDbCleaner.cleanDatabase;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -10,7 +9,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import ch.admin.bag.covidcertificate.backend.delivery.data.DeliveryDataService;
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeNotFoundException;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
@@ -21,36 +19,20 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.controller.BaseControllerTest;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.Action;
-import ch.admin.bag.covidcertificate.backend.delivery.ws.security.encryption.CryptoHelper;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.util.TestHelper;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
-import java.security.Signature;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
-import javax.sql.DataSource;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 public abstract class AppControllerTest extends BaseControllerTest {
-    @Autowired private DataSource dataSource;
-    @Autowired private DeliveryDataService deliveryDataService;
-
-    protected MediaType acceptMediaType;
-    protected Algorithm algorithm;
-
-    private static final String UNREGISTERED_CODE = "NWIKX22";
-    private static final String DUMMY_HCERT = "dummyhcert";
-    private static final String DUMMY_PDF = "dummypdf";
-
     private static final String BASE_URL = "/app/delivery/v1";
 
     private static final String INIT_ENDPOINT = BASE_URL + "/covidcert/register";
@@ -59,14 +41,9 @@ public abstract class AppControllerTest extends BaseControllerTest {
     private static final String PUSH_REGISTER_ENDPOINT = BASE_URL + "/push/register"; // TODO
     private static final String PUSH_DEREGISTER_ENDPOINT = BASE_URL + "/push/deregister"; // TODO
 
-    protected KeyPair ecKeyPair;
-    protected KeyPair rsaKeyPair;
-
     @BeforeAll
     public void setup() throws NoSuchAlgorithmException, SQLException {
-        this.ecKeyPair = CryptoHelper.createEcKeyPair();
-        this.rsaKeyPair = CryptoHelper.createRsaKeyPair();
-        cleanDatabase(dataSource.getConnection());
+        super.setup();
     }
 
     @Test
@@ -105,15 +82,6 @@ public abstract class AppControllerTest extends BaseControllerTest {
 
         // code released
         registerForDelivery(registration);
-    }
-
-    private void registerForDelivery(DeliveryRegistration registration) throws Exception {
-        mockMvc.perform(
-                        post(INIT_ENDPOINT)
-                                .content(asJsonString(registration))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .accept(acceptMediaType))
-                .andExpect(status().is2xxSuccessful());
     }
 
     @Test
@@ -385,62 +353,6 @@ public abstract class AppControllerTest extends BaseControllerTest {
                 getSignatureForPayload(
                         signaturePayload.getBytes(StandardCharsets.UTF_8), algorithm));
         return payload;
-    }
-
-    private DeliveryRegistration getDeliveryRegistration(
-            Action action, String code, Instant instant, Algorithm algorithm) throws Exception {
-        DeliveryRegistration registration = new DeliveryRegistration();
-        registration.setCode(code);
-        registration.setPublicKey(getPublicKey(algorithm));
-        registration.setAlgorithm(algorithm);
-        String signaturePayload = getSignaturePayload(action, code, instant);
-        registration.setSignaturePayload(signaturePayload);
-        registration.setSignature(
-                getSignatureForPayload(
-                        signaturePayload.getBytes(StandardCharsets.UTF_8), algorithm));
-        return registration;
-    }
-
-    private String getPublicKey(Algorithm algorithm) {
-        switch (algorithm) {
-            case EC256:
-                return getEcPubKey();
-            case RSA2048:
-                return getRsaPubKey();
-            default:
-                throw new RuntimeException("unexpected algorithm");
-        }
-    }
-
-    private String getSignaturePayload(Action action, String code, Instant instant) {
-        return action.name() + ":" + code + ":" + instant.toEpochMilli();
-    }
-
-    private String getSignatureForPayload(byte[] toSign, Algorithm algorithm) throws Exception {
-        Signature sig;
-        switch (algorithm) {
-            case EC256:
-                sig = Signature.getInstance("SHA256withECDSA");
-                sig.initSign(ecKeyPair.getPrivate());
-                break;
-            case RSA2048:
-                sig = Signature.getInstance("SHA256withRSA/PSS", new BouncyCastleProvider());
-                sig.initSign(rsaKeyPair.getPrivate());
-                break;
-            default:
-                throw new RuntimeException("unexpected algorithm");
-        }
-        sig.update(toSign);
-        byte[] signatureBytes = sig.sign();
-        return Base64.getEncoder().encodeToString(signatureBytes);
-    }
-
-    private String getEcPubKey() {
-        return CryptoHelper.getEcPubKeyUncompressedOctal(ecKeyPair.getPublic());
-    }
-
-    private String getRsaPubKey() {
-        return Base64.getEncoder().encodeToString(rsaKeyPair.getPublic().getEncoded());
     }
 
     private void upsertDummyCovidCert(String code) throws CodeNotFoundException {
