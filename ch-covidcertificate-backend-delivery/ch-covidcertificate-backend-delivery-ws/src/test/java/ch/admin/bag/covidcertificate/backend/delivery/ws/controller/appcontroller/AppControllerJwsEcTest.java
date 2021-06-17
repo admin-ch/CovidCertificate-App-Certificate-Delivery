@@ -8,14 +8,15 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package ch.admin.bag.covidcertificate.backend.delivery.ws.controller;
+package ch.admin.bag.covidcertificate.backend.delivery.ws.controller.appcontroller;
 
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.security.signature.JwsMessageConverter;
 import java.security.NoSuchAlgorithmException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 
 @ActiveProfiles({"actuator-security"})
@@ -27,11 +28,12 @@ import org.springframework.test.context.ActiveProfiles;
             "management.endpoints.web.exposure.include=*"
         })
 @TestInstance(Lifecycle.PER_CLASS)
-public class AppControllerJsonTest extends AppControllerTest {
+public class AppControllerJwsEcTest extends AppControllerTest {
 
     @BeforeAll
     public void setup() throws NoSuchAlgorithmException {
         super.setup();
-        this.acceptMediaType = MediaType.APPLICATION_JSON;
+        this.acceptMediaType = JwsMessageConverter.JWS_MEDIA_TYPE;
+        this.algorithm = Algorithm.EC256;
     }
 }
