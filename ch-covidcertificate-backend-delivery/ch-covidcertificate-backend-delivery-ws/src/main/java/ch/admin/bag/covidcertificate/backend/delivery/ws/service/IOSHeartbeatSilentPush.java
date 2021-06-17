@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,44 +59,38 @@ public class IOSHeartbeatSilentPush {
         this.topic = topic;
     }
 
-    private void initApnsClients()
-            throws InvalidKeyException, NoSuchAlgorithmException, IOException, URISyntaxException {
-        var key = ApnsSigningKey.loadFromInputStream(signingKey, teamId, keyId);
+    @PostConstruct
+    private void initApnsClients() {
+        try {
+            var key = ApnsSigningKey.loadFromInputStream(signingKey, teamId, keyId);
 
-        this.apnsClient =
-                new ApnsClientBuilder()
-                        .setApnsServer(ApnsClientBuilder.PRODUCTION_APNS_HOST)
-                        .setSigningKey(key)
-                        .setProxyHandlerFactory(
-                                HttpProxyHandlerFactory.fromSystemProxies(
-                                        ApnsClientBuilder.PRODUCTION_APNS_HOST))
-                        .build();
+            this.apnsClient =
+                    new ApnsClientBuilder()
+                            .setApnsServer(ApnsClientBuilder.PRODUCTION_APNS_HOST)
+                            .setSigningKey(key)
+                            .setProxyHandlerFactory(
+                                    HttpProxyHandlerFactory.fromSystemProxies(
+                                            ApnsClientBuilder.PRODUCTION_APNS_HOST))
+                            .build();
 
-        this.apnsClientSandbox =
-                new ApnsClientBuilder()
-                        .setApnsServer(ApnsClientBuilder.DEVELOPMENT_APNS_HOST)
-                        .setSigningKey(key)
-                        .setProxyHandlerFactory(
-                                HttpProxyHandlerFactory.fromSystemProxies(
-                                        ApnsClientBuilder.DEVELOPMENT_APNS_HOST))
-                        .build();
+            this.apnsClientSandbox =
+                    new ApnsClientBuilder()
+                            .setApnsServer(ApnsClientBuilder.DEVELOPMENT_APNS_HOST)
+                            .setSigningKey(key)
+                            .setProxyHandlerFactory(
+                                    HttpProxyHandlerFactory.fromSystemProxies(
+                                            ApnsClientBuilder.DEVELOPMENT_APNS_HOST))
+                            .build();
+        } catch (InvalidKeyException
+                | NoSuchAlgorithmException
+                | IOException
+                | URISyntaxException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     public void sendHeartbeats() {
         logger.info("Send iOS heartbeat push");
-
-        if (apnsClient == null) {
-            logger.info("Init apns clients");
-            try {
-                initApnsClients();
-            } catch (InvalidKeyException
-                    | NoSuchAlgorithmException
-                    | IOException
-                    | URISyntaxException e) {
-                logger.error("Exception initializing apns clients, abort.", e);
-            }
-        }
-
         logger.info("Load tokens from database batch-wise.");
         var maxId = 0;
 
