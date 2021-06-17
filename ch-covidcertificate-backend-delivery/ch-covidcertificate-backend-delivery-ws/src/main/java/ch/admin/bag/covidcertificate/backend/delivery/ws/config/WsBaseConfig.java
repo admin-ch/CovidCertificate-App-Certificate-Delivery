@@ -151,7 +151,7 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
         byte[] pushSigningKey = Base64.getDecoder().decode(iosPushSigningKey);
         return new IOSHeartbeatSilentPush(
                 pushRegistrationDataService,
-                new ByteArrayInputStream(pushSigningKey),
+                pushSigningKey,
                 iosPushTeamId,
                 iosPushKeyId,
                 iosPushTopic);
