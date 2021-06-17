@@ -58,23 +58,26 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
     Map<String, String> additionalHeaders;
     // base64 encoded p8 file
     @Value("${push.ios.signingkey}")
-    private String iosPushSigningKey;
+    protected String iosPushSigningKey;
 
     @Value("${push.ios.teamid}")
-    private String iosPushTeamId;
+    protected String iosPushTeamId;
 
     @Value("${push.ios.keyid}")
-    private String iosPushKeyId;
+    protected String iosPushKeyId;
 
     @Value("${push.ios.topic}")
-    private String iosPushTopic;
+    protected String iosPushTopic;
 
     @Value("${push.batchsize:100000}")
-    private int batchSize;
+    protected int batchSize;
 
     public abstract DataSource dataSource();
 
     public abstract Flyway flyway();
+
+    public abstract IOSHeartbeatSilentPush iosHeartbeatSilentPush(
+            DeliveryDataService pushRegistrationDataService);
 
     @Override
     public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
@@ -143,17 +146,5 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
     public CgsController cgsController(
             DeliveryDataService deliveryDataService, Crypto ecCrypto, Crypto rsaCrypto) {
         return new CgsController(deliveryDataService, ecCrypto, rsaCrypto);
-    }
-
-    @Bean
-    public IOSHeartbeatSilentPush iosHeartbeatSilentPush(
-            DeliveryDataService pushRegistrationDataService) {
-        byte[] pushSigningKey = Base64.getDecoder().decode(iosPushSigningKey);
-        return new IOSHeartbeatSilentPush(
-                pushRegistrationDataService,
-                pushSigningKey,
-                iosPushTeamId,
-                iosPushKeyId,
-                iosPushTopic);
     }
 }
