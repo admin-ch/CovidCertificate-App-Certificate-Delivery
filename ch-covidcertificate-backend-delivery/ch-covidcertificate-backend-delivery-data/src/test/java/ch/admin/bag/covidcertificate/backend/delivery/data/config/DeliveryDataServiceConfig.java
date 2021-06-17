@@ -14,6 +14,7 @@ import ch.admin.bag.covidcertificate.backend.delivery.data.DeliveryDataService;
 import ch.admin.bag.covidcertificate.backend.delivery.data.impl.JdbcDeliveryDataServiceImpl;
 import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -22,8 +23,11 @@ public class DeliveryDataServiceConfig {
 
     @Autowired DataSource dataSource;
 
+    @Value("${push.batchsize}")
+    private int batchsize;
+
     @Bean
     public DeliveryDataService deliveryDataService() {
-        return new JdbcDeliveryDataServiceImpl(dataSource, 2);
+        return new JdbcDeliveryDataServiceImpl(dataSource, batchsize);
     }
 }
