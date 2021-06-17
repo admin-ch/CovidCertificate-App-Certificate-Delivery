@@ -61,10 +61,8 @@ public class IOSHeartbeatSilentPush {
 
     @PostConstruct
     private void initApnsClients() {
-        try {
-            final var inputStream = new ByteArrayInputStream(signingKey);
+        try (final var inputStream = new ByteArrayInputStream(signingKey)) {
             var key = ApnsSigningKey.loadFromInputStream(inputStream, teamId, keyId);
-            inputStream.close();
 
             this.apnsClient =
                     new ApnsClientBuilder()
@@ -95,18 +93,19 @@ public class IOSHeartbeatSilentPush {
         logger.info("Send iOS heartbeat push");
         logger.info("Load tokens from database batch-wise.");
         for (PushType pushType : PushType.values()) {
-            int maxId = 0, nextMaxId = 0;
+            var maxId = 0;
+            var nextMaxId = 0;
             List<PushRegistration> registrationList;
             var done = false;
             do {
                 done = true;
                 registrationList =
                         pushRegistrationDataService.getPushRegistrationByType(pushType, maxId);
-                logger.info("Found {} {} push tokens", registrationList.size(), pushType.name());
+                logger.info("Found {} {} push tokens", registrationList.size(), pushType);
                 if (!registrationList.isEmpty()) {
                     done = false;
                     Set<String> pushTokens = new HashSet<>();
-                    nextMaxId = getTokens(nextMaxId, registrationList, pushTokens);
+                    nextMaxId = registrationsToTokens(registrationList, pushTokens);
                     sendPushNotificationsBatch(pushTokens, pushType);
                 }
                 maxId = nextMaxId;
@@ -115,9 +114,16 @@ public class IOSHeartbeatSilentPush {
         logger.info("iOS hearbeat push done");
     }
 
-    private int getTokens(
-            int maxId, List<PushRegistration> registrationWrappers, Set<String> pushTokens) {
-        for (PushRegistration pushRegistration : registrationWrappers) {
+    /**
+     * Helper function to fill the push tokens from the list of push registrations into a separate
+     * set
+     *
+     * @return maximum id contained in the list of push registrations
+     */
+    private int registrationsToTokens(
+            List<PushRegistration> pushRegistrations, Set<String> pushTokens) {
+        var maxId = 0;
+        for (PushRegistration pushRegistration : pushRegistrations) {
             pushTokens.add(pushRegistration.getPushToken());
             final var id = pushRegistration.getId();
             if (id > maxId) {
