@@ -29,6 +29,7 @@ import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.Inva
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidSignaturePayloadException;
 import ch.ubique.openapi.docannotations.Documentation;
 import java.util.List;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -190,10 +191,18 @@ public class AppController {
         return ResponseEntity.ok().build();
     }
 
+    private boolean isRegisterRequest(HttpServletRequest req) {
+        return req.getRequestURL().toString().endsWith("/app/delivery/v1/covidcert/register");
+    }
+
     @ExceptionHandler({CodeAlreadyExistsException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ResponseEntity<String> codeAlreadyExists() {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body("code already in use");
+    public ResponseEntity<String> codeAlreadyExists(HttpServletRequest req) {
+        if (isRegisterRequest(req)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("code already in use");
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("access denied");
+        }
     }
 
     @ExceptionHandler({CodeNotFoundException.class})
@@ -210,13 +219,21 @@ public class AppController {
 
     @ExceptionHandler({InvalidPublicKeyException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<String> invalidPublicKey() {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("invalid public key");
+    public ResponseEntity<String> invalidPublicKey(HttpServletRequest req) {
+        if (isRegisterRequest(req)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("invalid public key");
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("access denied");
+        }
     }
 
     @ExceptionHandler({InvalidActionException.class})
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
-    public ResponseEntity<String> invalidAction() {
-        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body("invalid action");
+    public ResponseEntity<String> invalidAction(HttpServletRequest req) {
+        if (isRegisterRequest(req)) {
+            return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body("invalid action");
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("access denied");
+        }
     }
 }
