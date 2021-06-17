@@ -14,8 +14,8 @@ import com.eatthepath.pushy.apns.util.ApnsPayloadBuilder;
 import com.eatthepath.pushy.apns.util.SimpleApnsPayloadBuilder;
 import com.eatthepath.pushy.apns.util.SimpleApnsPushNotification;
 import com.eatthepath.pushy.apns.util.concurrent.PushNotificationFuture;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -40,7 +40,7 @@ public class IOSHeartbeatSilentPush {
 
     private final DeliveryDataService pushRegistrationDataService;
     private final String topic;
-    private final InputStream signingKey;
+    private final byte[] signingKey;
     private final String teamId;
     private final String keyId;
     private ApnsClient apnsClient;
@@ -48,7 +48,7 @@ public class IOSHeartbeatSilentPush {
 
     public IOSHeartbeatSilentPush(
             final DeliveryDataService pushRegistrationDataService,
-            InputStream signingKey,
+            byte[] signingKey,
             String teamId,
             String keyId,
             String topic) {
@@ -62,7 +62,9 @@ public class IOSHeartbeatSilentPush {
     @PostConstruct
     private void initApnsClients() {
         try {
-            var key = ApnsSigningKey.loadFromInputStream(signingKey, teamId, keyId);
+            final var inputStream = new ByteArrayInputStream(signingKey);
+            var key = ApnsSigningKey.loadFromInputStream(inputStream, teamId, keyId);
+            inputStream.close();
 
             this.apnsClient =
                     new ApnsClientBuilder()
