@@ -19,7 +19,6 @@ import ch.admin.bag.covidcertificate.backend.delivery.data.config.FlyWayConfig;
 import ch.admin.bag.covidcertificate.backend.delivery.data.config.PostgresDataConfig;
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeAlreadyExistsException;
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeNotFoundException;
-import ch.admin.bag.covidcertificate.backend.delivery.data.impl.PushRegistrationWrapper;
 import ch.admin.bag.covidcertificate.backend.delivery.data.util.PostgresDbCleaner;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
@@ -118,10 +117,10 @@ class DeliveryDataServiceTest {
         deliveryDataService.insertPushRegistration(pushRegistration);
 
         // check push registration added
-        List<PushRegistrationWrapper> pushRegistrations =
+        List<PushRegistration> pushRegistrations =
                 deliveryDataService.getPushRegistrationByType(PushType.IOS, 0);
         assertEquals(1, pushRegistrations.size());
-        assertPushRegistration(pushRegistration, pushRegistrations.get(0).getPushRegistration());
+        assertPushRegistration(pushRegistration, pushRegistrations.get(0));
 
         // insert same push registration again
         deliveryDataService.insertPushRegistration(pushRegistration);
@@ -129,7 +128,7 @@ class DeliveryDataServiceTest {
         // check no change
         pushRegistrations = deliveryDataService.getPushRegistrationByType(PushType.IOS, 0);
         assertEquals(1, pushRegistrations.size());
-        assertPushRegistration(pushRegistration, pushRegistrations.get(0).getPushRegistration());
+        assertPushRegistration(pushRegistration, pushRegistrations.get(0));
 
         // insert another push registration
         PushRegistration anotherPushRegistration = new PushRegistration();
@@ -147,8 +146,7 @@ class DeliveryDataServiceTest {
         // check push registration removed
         pushRegistrations = deliveryDataService.getPushRegistrationByType(PushType.IOS, 0);
         assertEquals(1, pushRegistrations.size());
-        assertPushRegistration(
-                anotherPushRegistration, pushRegistrations.get(0).getPushRegistration());
+        assertPushRegistration(anotherPushRegistration, pushRegistrations.get(0));
 
         // check push registration pk_id
         pushRegistrations = deliveryDataService.getPushRegistrationByType(PushType.IOS, 100);
@@ -157,6 +155,7 @@ class DeliveryDataServiceTest {
 
     @Test
     void testPushRegistrationOrdering() {
+        // TODO Write similar to silent push
         for (var i = 0; i < 20; i++) {
             PushRegistration pushRegistration = new PushRegistration();
             String pushToken = "push_token_" + i;
@@ -164,20 +163,23 @@ class DeliveryDataServiceTest {
             pushRegistration.setPushType(PushType.IOS);
             deliveryDataService.insertPushRegistration(pushRegistration);
         }
-        int prevMaxId = 0, maxId = 0;
-        List<PushRegistrationWrapper> registrationWrapperList;
+        int prevMaxId = 0, nextMaxId = 0;
+        List<PushRegistration> registrationList;
         do {
-            registrationWrapperList =
-                    deliveryDataService.getPushRegistrationByType(PushType.IOS, maxId);
-            logger.debug("Size of returned batch: {}", registrationWrapperList.size());
-            assertTrue(registrationWrapperList.size() <= batchsize);
-            for (PushRegistrationWrapper wrapper : registrationWrapperList) {
-                final var id = wrapper.getId();
-                assertTrue(prevMaxId < id && id <= prevMaxId + batchsize);
-                maxId = Math.max(maxId, id);
+            registrationList =
+                    deliveryDataService.getPushRegistrationByType(PushType.IOS, prevMaxId);
+            assertTrue(registrationList.size() <= batchsize);
+            for (PushRegistration pushRegistration : registrationList) {
+                final var id = pushRegistration.getId();
+                assertTrue(
+                        prevMaxId < id,
+                        String.format(
+                                "prevMaxId: %s, nextMaxId: %s, batchsize: %s, but id: %s",
+                                prevMaxId, nextMaxId, batchsize, id));
+                nextMaxId = Math.max(nextMaxId, id);
             }
-            prevMaxId = maxId;
-        } while (!registrationWrapperList.isEmpty());
+            prevMaxId = nextMaxId;
+        } while (!registrationList.isEmpty());
     }
 
     private void assertPushRegistration(PushRegistration expected, PushRegistration actual) {
