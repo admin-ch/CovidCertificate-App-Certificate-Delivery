@@ -155,10 +155,8 @@ public class IOSHeartbeatSilentPush {
             try {
                 PushNotificationResponse<ApnsPushNotification> r = f.get();
                 if (!r.isAccepted()
-                        && r.getRejectionReason() != null
-                        && (r.getRejectionReason().equals("BadDeviceToken")
-                                || r.getRejectionReason().equals("Unregistered")
-                                || r.getRejectionReason().equals("DeviceTokenNotForTopic"))) {
+                        && List.of("BadDeviceToken", "Unregistered", "DeviceTokenNotForTopic")
+                                .contains(r.getRejectionReason())) {
                     // collect bad/unregistered device tokens and remove from database
                     tokensToRemove.add(r.getPushNotification().getToken());
                 }
