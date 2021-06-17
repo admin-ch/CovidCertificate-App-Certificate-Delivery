@@ -33,8 +33,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
@@ -43,7 +45,8 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
         loader = AnnotationConfigContextLoader.class,
         classes = {PostgresDataConfig.class, FlyWayConfig.class, DeliveryDataServiceConfig.class})
 @ActiveProfiles("postgres")
-public class DeliveryDataServiceTest {
+@TestPropertySource(properties = {"push.batchsize=3"})
+class DeliveryDataServiceTest {
 
     @Autowired private DeliveryDataService deliveryDataService;
 
@@ -52,8 +55,11 @@ public class DeliveryDataServiceTest {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     @Autowired private DeliveryDataService deliveryDataService;
 
+    @Value("${push.batchsize}")
+    private int batchsize;
+
     @Test
-    public void testInitTransfer() throws Exception {
+    void testInitTransfer() throws Exception {
         // init transfer
         DeliveryRegistration registration = getDeliveryRegistration(CODE);
         deliveryDataService.initTransfer(registration);
@@ -77,7 +83,7 @@ public class DeliveryDataServiceTest {
     }
 
     @Test
-    public void testFindCovidCode() throws Exception {
+    void testFindCovidCode() throws Exception {
         // init transfer
         DeliveryRegistration registration = getDeliveryRegistration(CODE);
         deliveryDataService.initTransfer(registration);
@@ -91,7 +97,7 @@ public class DeliveryDataServiceTest {
     }
 
     @Test
-    public void testCloseTransfer() throws Exception {
+    void testCloseTransfer() throws Exception {
         // init transfer
         DeliveryRegistration registration = getDeliveryRegistration(CODE);
         deliveryDataService.initTransfer(registration);
@@ -106,7 +112,7 @@ public class DeliveryDataServiceTest {
     }
 
     @Test
-    public void testPushRegistration() throws Exception {
+    void testPushRegistration() throws Exception {
         // insert push registration
         PushRegistration pushRegistration = new PushRegistration();
         String pushToken = "push_token";
@@ -153,7 +159,7 @@ public class DeliveryDataServiceTest {
     }
 
     @Test
-    public void testPushRegistrationOrdering() {
+    void testPushRegistrationOrdering() {
         for (var i = 0; i < 20; i++) {
             PushRegistration pushRegistration = new PushRegistration();
             String pushToken = "push_token_" + i;
@@ -161,20 +167,19 @@ public class DeliveryDataServiceTest {
             pushRegistration.setPushType(PushType.IOS);
             deliveryDataService.insertPushRegistration(pushRegistration);
         }
-        var maxId = 0;
+        int prevMaxId = 0, maxId = 0;
         List<PushRegistrationWrapper> registrationWrapperList;
         do {
             registrationWrapperList =
                     deliveryDataService.getPushRegistrationByType(PushType.IOS, maxId);
             logger.debug("Size of returned batch: {}", registrationWrapperList.size());
-            assertTrue(registrationWrapperList.size() <= 2);
+            assertTrue(registrationWrapperList.size() <= batchsize);
             for (PushRegistrationWrapper wrapper : registrationWrapperList) {
                 final var id = wrapper.getId();
-                assertTrue(id == maxId + 1 || id == maxId + 2);
-                if (id > maxId) {
-                    maxId = id;
-                }
+                assertTrue(prevMaxId < id && id <= prevMaxId + batchsize);
+                maxId = Math.max(maxId, id);
             }
+            prevMaxId = maxId;
         } while (!registrationWrapperList.isEmpty());
     }
 
