@@ -2,17 +2,27 @@ package ch.admin.bag.covidcertificate.backend.delivery.ws.controller.appcontroll
 
 import static ch.admin.bag.covidcertificate.backend.delivery.data.util.PostgresDbCleaner.cleanDatabase;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import ch.admin.bag.covidcertificate.backend.delivery.data.DeliveryDataService;
+import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeNotFoundException;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCertDelivery;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistration;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.RequestDeliveryPayload;
+import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
+import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.controller.BaseControllerTest;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.Action;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.encryption.CryptoHelper;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.util.TestHelper;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -32,11 +42,14 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 public abstract class AppControllerTest extends BaseControllerTest {
     @Autowired private DataSource dataSource;
+    @Autowired private DeliveryDataService deliveryDataService;
 
     protected MediaType acceptMediaType;
     protected Algorithm algorithm;
 
     private static final String UNREGISTERED_CODE = "NWIKX22";
+    private static final String DUMMY_HCERT = "dummyhcert";
+    private static final String DUMMY_PDF = "dummypdf";
 
     private static final String BASE_URL = "/app/delivery/v1";
 
@@ -87,8 +100,8 @@ public abstract class AppControllerTest extends BaseControllerTest {
                                 .accept(acceptMediaType))
                 .andExpect(status().is(HttpStatus.CONFLICT.value()));
 
-        // close transfer
-        closeTransfer(registration);
+        // complete transfer
+        completeTransfer(registration);
 
         // code released
         registerForDelivery(registration);
@@ -166,6 +179,88 @@ public abstract class AppControllerTest extends BaseControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .accept(acceptMediaType))
                 .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
+    }
+
+    @Test
+    public void deliveryFlowTest() throws Exception {
+        final String code = "YQO15A9";
+
+        // register
+        registerForDelivery(
+                getDeliveryRegistration(Action.REGISTER, code, Instant.now(), this.algorithm));
+
+        // get covid cert (not ready)
+        MockHttpServletResponse response = getCovidCert(code);
+
+        // verify response
+        CovidCertDelivery emptyDelivery =
+                testHelper.verifyAndReadValue(
+                        response,
+                        acceptMediaType,
+                        TestHelper.PATH_TO_CA_PEM,
+                        CovidCertDelivery.class);
+        assertTrue(emptyDelivery.getCovidCerts().isEmpty());
+
+        // upsert dummy covid certificate
+        upsertDummyCovidCert(code);
+
+        // get covid cert (ready)
+        response = getCovidCert(code);
+
+        // verify response
+        CovidCertDelivery delivery =
+                testHelper.verifyAndReadValue(
+                        response,
+                        acceptMediaType,
+                        TestHelper.PATH_TO_CA_PEM,
+                        CovidCertDelivery.class);
+        assertEquals(1, delivery.getCovidCerts().size());
+        CovidCert covidCert = delivery.getCovidCerts().get(0);
+        assertEquals(DUMMY_HCERT, covidCert.getEncryptedHcert());
+        assertEquals(DUMMY_PDF, covidCert.getEncryptedPdf());
+
+        // verify covid cert is still in db
+        assertEquals(1, deliveryDataService.findCovidCerts(code).size());
+
+        // bad complete transfer request
+        completeTransfer(
+                getRequestDeliveryPayload(
+                        Action.DELETE,
+                        code,
+                        Instant.now().minus(6, ChronoUnit.MINUTES),
+                        this.algorithm));
+
+        // verify covid cert is still in db
+        assertEquals(1, deliveryDataService.findCovidCerts(code).size());
+
+        // complete transfer
+        completeTransfer(
+                getRequestDeliveryPayload(Action.DELETE, code, Instant.now(), this.algorithm));
+
+        // verify transfer is closed
+        assertThrows(CodeNotFoundException.class, () -> deliveryDataService.findCovidCerts(code));
+
+        // verify code has been released
+        assertFalse(deliveryDataService.transferCodeExists(code));
+    }
+
+    private MockHttpServletResponse getCovidCert(String code) throws Exception {
+        MockHttpServletResponse response =
+                mockMvc.perform(
+                                post(GET_COVID_CERT_ENDPOINT)
+                                        .content(
+                                                asJsonString(
+                                                        getRequestDeliveryPayload(
+                                                                Action.GET,
+                                                                code,
+                                                                Instant.now(),
+                                                                this.algorithm)))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .accept(acceptMediaType))
+                        .andExpect(status().is2xxSuccessful())
+                        .andReturn()
+                        .getResponse();
+        return response;
     }
 
     @Test
@@ -253,16 +348,17 @@ public abstract class AppControllerTest extends BaseControllerTest {
         return Algorithm.EC256.equals(this.algorithm) ? Algorithm.RSA2048 : Algorithm.EC256;
     }
 
-    private void closeTransfer(DeliveryRegistration registration) throws Exception {
-        RequestDeliveryPayload payload = getDeliveryCompletePayload(registration);
+    private void completeTransfer(DeliveryRegistration registration) throws Exception {
+        completeTransfer(getDeliveryCompletePayload(registration));
+    }
+
+    private void completeTransfer(RequestDeliveryPayload payload) throws Exception {
         mockMvc.perform(
                         post(COMPLETE_ENDPOINT)
                                 .content(asJsonString(payload))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .accept(acceptMediaType))
-                .andExpect(status().is2xxSuccessful())
-                .andReturn()
-                .getResponse();
+                .andExpect(status().is2xxSuccessful());
     }
 
     private RequestDeliveryPayload getDeliveryCompletePayload(DeliveryRegistration registration)
@@ -345,6 +441,15 @@ public abstract class AppControllerTest extends BaseControllerTest {
 
     private String getRsaPubKey() {
         return Base64.getEncoder().encodeToString(rsaKeyPair.getPublic().getEncoded());
+    }
+
+    private void upsertDummyCovidCert(String code) throws CodeNotFoundException {
+        DbCovidCert dbCovidCert = new DbCovidCert();
+        DbTransfer transfer = deliveryDataService.findTransfer(code);
+        dbCovidCert.setFkTransfer(transfer.getPk());
+        dbCovidCert.setEncryptedHcert(DUMMY_HCERT);
+        dbCovidCert.setEncryptedPdf(DUMMY_PDF);
+        deliveryDataService.insertCovidCert(dbCovidCert);
     }
 
     @Override

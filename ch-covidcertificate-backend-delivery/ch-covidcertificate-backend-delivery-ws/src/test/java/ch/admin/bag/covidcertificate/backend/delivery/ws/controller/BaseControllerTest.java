@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import ch.admin.bag.covidcertificate.backend.delivery.ws.util.TestHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javax.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
@@ -47,6 +48,7 @@ public abstract class BaseControllerTest {
 
     @Autowired protected MockMvc mockMvc;
     protected ObjectMapper objectMapper = new ObjectMapper();
+    protected TestHelper testHelper = new TestHelper(objectMapper);
 
     public static class DockerPostgresDataSourceInitializer
             implements ApplicationContextInitializer<ConfigurableApplicationContext> {
