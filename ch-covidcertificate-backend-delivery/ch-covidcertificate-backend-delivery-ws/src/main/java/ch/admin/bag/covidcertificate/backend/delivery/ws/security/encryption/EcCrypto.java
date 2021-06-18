@@ -31,6 +31,10 @@ import javax.crypto.spec.SecretKeySpec;
 public class EcCrypto extends Crypto {
 
     public static final String SECP256R1 = "secp256r1";
+    private static final String EC = "EC";
+    private static final String AES = "AES";
+    private static final String AES_GCM_NO_PADDING = "AES/GCM/NoPadding";
+    private static final String SHA256_WITH_ECDSA = "SHA256withECDSA";
 
     @Override
     public String encrypt(String toEncrypt, String publicKey)
@@ -46,7 +50,7 @@ public class EcCrypto extends Crypto {
         var y = Arrays.copyOfRange(publicKeyBytes, 33, publicKeyBytes.length);
 
         // ephemeral keys
-        var kpg = KeyPairGenerator.getInstance("EC");
+        var kpg = KeyPairGenerator.getInstance(EC);
         kpg.initialize(256);
         var kp = kpg.generateKeyPair();
         // convert them to uncompressed point form
@@ -69,7 +73,7 @@ public class EcCrypto extends Crypto {
         }
 
         // generate a publickey from ios publickeydata
-        var kf = KeyFactory.getInstance("EC");
+        var kf = KeyFactory.getInstance(EC);
         var ecKeySpec =
                 new ECPublicKeySpec(
                         new ECPoint(new BigInteger(1, x), new BigInteger(1, y)),
@@ -92,8 +96,8 @@ public class EcCrypto extends Crypto {
         var ivSpec = new GCMParameterSpec(128, iv);
 
         // now we are ready. We can initialize the AES cipher
-        var secretKey = new SecretKeySpec(aesSecret, "AES");
-        var cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        var secretKey = new SecretKeySpec(aesSecret, AES);
+        var cipher = Cipher.getInstance(AES_GCM_NO_PADDING);
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
         var cipherText = cipher.doFinal(toEncrypt.getBytes(StandardCharsets.UTF_8));
 
@@ -108,7 +112,7 @@ public class EcCrypto extends Crypto {
 
     public static ECParameterSpec ecParameterSpecForCurve(String curveName)
             throws NoSuchAlgorithmException, InvalidParameterSpecException {
-        AlgorithmParameters params = AlgorithmParameters.getInstance("EC");
+        AlgorithmParameters params = AlgorithmParameters.getInstance(EC);
         params.init(new ECGenParameterSpec(curveName));
         return params.getParameterSpec(ECParameterSpec.class);
     }
@@ -142,7 +146,7 @@ public class EcCrypto extends Crypto {
         var x = Arrays.copyOfRange(publicKeyBytes, 1, 33);
         var y = Arrays.copyOfRange(publicKeyBytes, 33, publicKeyBytes.length);
 
-        KeyFactory kf = KeyFactory.getInstance("EC");
+        KeyFactory kf = KeyFactory.getInstance(EC);
         var ecKeySpec =
                 new ECPublicKeySpec(
                         new ECPoint(new BigInteger(1, x), new BigInteger(1, y)),
@@ -152,6 +156,6 @@ public class EcCrypto extends Crypto {
 
     @Override
     protected Signature getSignature() throws NoSuchAlgorithmException {
-        return Signature.getInstance("SHA256withECDSA");
+        return Signature.getInstance(SHA256_WITH_ECDSA);
     }
 }
