@@ -141,6 +141,7 @@ public class AppController {
             deliveryDataService.closeTransfer(payload.getCode());
         } catch (Exception e) {
             // do nothing. best effort only.
+            logger.info("failed to delete/clean transfer", e);
         }
         return ResponseEntity.ok().build();
     }

@@ -9,21 +9,21 @@ public class SignaturePayloadValidator {
 
     public void validate(String signaturePayload, Action expectedAction, String code)
             throws InvalidSignaturePayloadException, InvalidActionException {
-        String[] actionCodeTimestamp = signaturePayload.split(":");
+        String[] signaturePayloadSplit = signaturePayload.split(":");
 
-        if (actionCodeTimestamp.length != 3) {
+        if (signaturePayloadSplit.length != 3) {
             throw new InvalidSignaturePayloadException();
         }
 
-        if (!isCurrentTimestamp(Long.valueOf(actionCodeTimestamp[2]))) {
+        if (!isCurrentTimestamp(Long.valueOf(signaturePayloadSplit[2]))) {
             throw new InvalidSignaturePayloadException();
         }
 
-        if (!code.equals(actionCodeTimestamp[1])) {
+        if (!code.equals(signaturePayloadSplit[1])) {
             throw new InvalidSignaturePayloadException();
         }
 
-        if (!expectedAction.equals(Action.forName(actionCodeTimestamp[0]))) {
+        if (!expectedAction.equals(Action.forName(signaturePayloadSplit[0]))) {
             throw new InvalidActionException();
         }
     }
