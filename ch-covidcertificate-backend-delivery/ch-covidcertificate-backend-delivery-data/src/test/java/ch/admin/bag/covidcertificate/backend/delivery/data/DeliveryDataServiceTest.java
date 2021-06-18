@@ -20,7 +20,6 @@ import ch.admin.bag.covidcertificate.backend.delivery.data.config.PostgresDataCo
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeAlreadyExistsException;
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeNotFoundException;
 import ch.admin.bag.covidcertificate.backend.delivery.data.util.CodeGenerator;
-import ch.admin.bag.covidcertificate.backend.delivery.data.impl.PushRegistrationWrapper;
 import ch.admin.bag.covidcertificate.backend.delivery.data.util.PostgresDbCleaner;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;

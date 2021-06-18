@@ -28,7 +28,6 @@ import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.Inva
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidSignatureException;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidSignaturePayloadException;
 import ch.ubique.openapi.docannotations.Documentation;
-import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;

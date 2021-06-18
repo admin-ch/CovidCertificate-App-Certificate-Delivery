@@ -111,11 +111,7 @@ public class CryptoTest {
                                         + "  \"signature\": \"%s\",\n"
                                         + "  \"signaturePayload\": \"%s\"\n"
                                         + "}",
-                                code,
-                                pubKey,
-                                algorithm,
-                                signature,
-                                signaturePayload));
+                                code, pubKey, algorithm, signature, signaturePayload));
             } else {
                 System.out.println(
                         String.format(
@@ -126,7 +122,7 @@ public class CryptoTest {
                                         + "}",
                                 code, signature, signaturePayload));
             }
-                System.out.println("---------------------------------------------------------");
+            System.out.println("---------------------------------------------------------");
         }
     }
 

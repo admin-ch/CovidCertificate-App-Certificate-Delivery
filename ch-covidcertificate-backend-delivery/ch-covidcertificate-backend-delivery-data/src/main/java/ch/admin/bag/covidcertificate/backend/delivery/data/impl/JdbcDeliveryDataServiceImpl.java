@@ -9,9 +9,9 @@ import ch.admin.bag.covidcertificate.backend.delivery.data.mapper.TransferRowMap
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistration;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration;
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
-import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;

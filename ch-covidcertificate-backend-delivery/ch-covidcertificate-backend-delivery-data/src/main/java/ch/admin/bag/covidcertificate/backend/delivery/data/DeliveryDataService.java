@@ -8,7 +8,6 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
-import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
 import java.time.Instant;
 import java.util.List;
 
