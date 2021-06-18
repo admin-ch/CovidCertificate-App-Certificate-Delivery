@@ -22,6 +22,12 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class RsaCrypto extends Crypto {
 
+    private final SecureRandom secureRandom;
+
+    public RsaCrypto() {
+        this.secureRandom = new SecureRandom();
+    }
+
     @Override
     public String encrypt(String toEncrypt, String publicKey)
             throws NoSuchPaddingException, NoSuchAlgorithmException,
@@ -30,7 +36,6 @@ public class RsaCrypto extends Crypto {
         RSAPublicKey rsaPubKey = (RSAPublicKey) getPublicKey(publicKey);
 
         // generate random secret and random IV
-        SecureRandom secureRandom = new SecureRandom();
         byte[] keyBytes = new byte[32];
         byte[] customIV = new byte[12];
         secureRandom.nextBytes(keyBytes);
