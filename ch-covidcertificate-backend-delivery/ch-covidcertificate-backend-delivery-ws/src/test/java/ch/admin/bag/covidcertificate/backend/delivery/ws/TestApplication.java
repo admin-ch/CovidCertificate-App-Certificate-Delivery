@@ -10,9 +10,17 @@
 
 package ch.admin.bag.covidcertificate.backend.delivery.ws;
 
+import ch.admin.bag.covidcertificate.backend.delivery.ws.config.SchedulingConfig;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 
-@ComponentScan(basePackages = {"ch.admin.bag.covidcertificate.backend.delivery.ws.config"})
+@ComponentScan(
+        basePackages = {"ch.admin.bag.covidcertificate.backend.delivery.ws.config"},
+        excludeFilters = {
+            @ComponentScan.Filter(
+                    type = FilterType.ASSIGNABLE_TYPE,
+                    classes = SchedulingConfig.class)
+        })
 @SpringBootApplication
 public class TestApplication {}

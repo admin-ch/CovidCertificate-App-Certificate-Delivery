@@ -1,5 +1,8 @@
 package ch.admin.bag.covidcertificate.backend.delivery.ws.config;
 
+import ch.admin.bag.covidcertificate.backend.delivery.data.DeliveryDataService;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.service.IOSHeartbeatSilentPush;
+import java.util.Base64;
 import java.util.Map;
 import javax.sql.DataSource;
 import org.flywaydb.core.Flyway;
@@ -47,5 +50,17 @@ public abstract class WsCloudBaseConfig extends WsBaseConfig {
                         .load();
         flyWay.migrate();
         return flyWay;
+    }
+
+    @Bean
+    public IOSHeartbeatSilentPush iosHeartbeatSilentPush(
+            DeliveryDataService pushRegistrationDataService) {
+        byte[] pushSigningKey = Base64.getDecoder().decode(iosPushSigningKey);
+        return new IOSHeartbeatSilentPush(
+                pushRegistrationDataService,
+                pushSigningKey,
+                iosPushTeamId,
+                iosPushKeyId,
+                iosPushTopic);
     }
 }

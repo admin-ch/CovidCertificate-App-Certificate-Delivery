@@ -9,6 +9,7 @@ import ch.admin.bag.covidcertificate.backend.delivery.data.mapper.TransferRowMap
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistration;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration;
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
 import java.time.Instant;
@@ -26,8 +27,9 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
     private final SimpleJdbcInsert transferInsert;
     private final SimpleJdbcInsert pushRegistrationInsert;
     private final SimpleJdbcInsert covidCertInsert;
+    private final int batchSize;
 
-    public JdbcDeliveryDataServiceImpl(DataSource dataSource) {
+    public JdbcDeliveryDataServiceImpl(DataSource dataSource, int batchSize) {
         this.jt = new NamedParameterJdbcTemplate(dataSource);
         this.transferInsert =
                 new SimpleJdbcInsert(dataSource)
@@ -41,6 +43,7 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
                 new SimpleJdbcInsert(dataSource)
                         .withTableName("t_covidcert")
                         .usingGeneratedKeyColumns("pk_covidcert_id", "created_at");
+        this.batchSize = batchSize;
     }
 
     @Override
@@ -144,21 +147,24 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
 
     @Override
     @Transactional(readOnly = false)
-    public void removePushRegistration(PushRegistration registration) {
-        String sql =
-                "delete from t_push_registration"
-                        + " where push_token = :push_token"
-                        + " and push_type = :push_type";
-        jt.update(sql, createPushRegistrationParams(registration));
+    public void removeRegistrations(List<String> tokensToRemove) {
+        if (tokensToRemove != null && !tokensToRemove.isEmpty()) {
+            jt.update(
+                    "delete from t_push_registration where push_token in (:tokensToRemove)",
+                    new MapSqlParameterSource("tokensToRemove", tokensToRemove));
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<PushRegistration> findAllPushRegistrations() {
-        return jt.query(
-                "select * from t_push_registration",
-                new MapSqlParameterSource(),
-                new PushRegistrationRowMapper());
+    public List<PushRegistration> getPushRegistrationByType(
+            final PushType pushType, int prevMaxId) {
+        final var sql =
+                "select * from t_push_registration where push_type = :push_type and pk_push_registration_id > :prev_max_id order by pk_push_registration_id asc limit :batch_size";
+        final var params = new MapSqlParameterSource("push_type", pushType.name());
+        params.addValue("prev_max_id", prevMaxId);
+        params.addValue("batch_size", batchSize);
+        return jt.query(sql, params, new PushRegistrationRowMapper());
     }
 
     @Override

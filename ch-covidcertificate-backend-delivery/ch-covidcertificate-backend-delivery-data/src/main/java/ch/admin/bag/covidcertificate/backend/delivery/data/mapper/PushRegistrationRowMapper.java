@@ -13,6 +13,7 @@ public class PushRegistrationRowMapper implements RowMapper<PushRegistration> {
         var pushRegistration = new PushRegistration();
         pushRegistration.setPushToken(rs.getString("push_token"));
         pushRegistration.setPushType(PushType.valueOf(rs.getString("push_type")));
+        pushRegistration.setId(rs.getInt("pk_push_registration_id"));
         return pushRegistration;
     }
 }

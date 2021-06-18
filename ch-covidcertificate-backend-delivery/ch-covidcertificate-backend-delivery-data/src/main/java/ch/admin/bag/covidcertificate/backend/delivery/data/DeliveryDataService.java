@@ -28,9 +28,9 @@ public interface DeliveryDataService {
 
     public void insertPushRegistration(PushRegistration registration);
 
-    public void removePushRegistration(PushRegistration registration);
+    void removeRegistrations(List<String> tokensToRemove);
 
-    public List<PushRegistration> findAllPushRegistrations();
+    List<PushRegistration> getPushRegistrationByType(PushType pushType, int prevMaxId);
 
     public void insertCovidCert(DbCovidCert covidCert);
 }

@@ -188,7 +188,7 @@ public class AppController {
     @PostMapping(value = "/push/deregister")
     public ResponseEntity<Void> deregisterForPush(
             @Valid @RequestBody PushRegistration registration) {
-        deliveryDataService.removePushRegistration(registration);
+        deliveryDataService.removeRegistrations(List.of(registration.getPushToken()));
         return ResponseEntity.ok().build();
     }
 

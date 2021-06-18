@@ -20,6 +20,7 @@ import ch.admin.bag.covidcertificate.backend.delivery.ws.security.encryption.Cry
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.encryption.EcCrypto;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.encryption.RsaCrypto;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.signature.JwsMessageConverter;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.service.IOSHeartbeatSilentPush;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.KeyStore;
@@ -46,19 +47,37 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    @Value(
-            "#{${ws.security.headers: {'X-Content-Type-Options':'nosniff', 'X-Frame-Options':'DENY','X-Xss-Protection':'1; mode=block'}}}")
-    Map<String, String> additionalHeaders;
-
     @Value("${ws.jws.p12:}")
     public String p12KeyStore;
 
     @Value("${ws.jws.password:}")
     public String p12KeyStorePassword;
 
+    @Value(
+            "#{${ws.security.headers: {'X-Content-Type-Options':'nosniff', 'X-Frame-Options':'DENY','X-Xss-Protection':'1; mode=block'}}}")
+    Map<String, String> additionalHeaders;
+    // base64 encoded p8 file
+    @Value("${push.ios.signingkey}")
+    protected String iosPushSigningKey;
+
+    @Value("${push.ios.teamid}")
+    protected String iosPushTeamId;
+
+    @Value("${push.ios.keyid}")
+    protected String iosPushKeyId;
+
+    @Value("${push.ios.topic}")
+    protected String iosPushTopic;
+
+    @Value("${push.batchsize:100000}")
+    protected int batchSize;
+
     public abstract DataSource dataSource();
 
     public abstract Flyway flyway();
+
+    public abstract IOSHeartbeatSilentPush iosHeartbeatSilentPush(
+            DeliveryDataService pushRegistrationDataService);
 
     @Override
     public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
@@ -100,7 +119,7 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
 
     @Bean
     public DeliveryDataService deliveryDataService(DataSource dataSource) {
-        return new JdbcDeliveryDataServiceImpl(dataSource);
+        return new JdbcDeliveryDataServiceImpl(dataSource, batchSize);
     }
 
     @Bean
