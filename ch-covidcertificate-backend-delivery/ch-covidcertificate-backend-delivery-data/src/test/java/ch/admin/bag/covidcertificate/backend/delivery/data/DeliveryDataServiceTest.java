@@ -52,7 +52,6 @@ class DeliveryDataServiceTest {
     public static final String CODE = CodeGenerator.generateCode();
     public static final String PUBLIC_KEY = "public_key";
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    @Autowired private DeliveryDataService deliveryDataService;
 
     @Value("${push.batchsize}")
     private int batchsize;
