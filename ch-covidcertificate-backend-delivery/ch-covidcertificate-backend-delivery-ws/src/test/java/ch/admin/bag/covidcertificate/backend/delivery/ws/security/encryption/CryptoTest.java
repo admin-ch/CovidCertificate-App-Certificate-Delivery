@@ -2,6 +2,7 @@ package ch.admin.bag.covidcertificate.backend.delivery.ws.security.encryption;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import ch.admin.bag.covidcertificate.backend.delivery.data.util.CodeGenerator;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.Action;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidSignatureException;
@@ -69,7 +70,7 @@ public class CryptoTest {
         System.out.println(crypto.encrypt("this is a test (rsa)", RSA_TEST_PUB_KEY));
     }
 
-    private static final String CODE = "A7KBZ91XL";
+    private static final String CODE = CodeGenerator.generateCode();
 
     @Test
     public void signEcTest() throws Exception {

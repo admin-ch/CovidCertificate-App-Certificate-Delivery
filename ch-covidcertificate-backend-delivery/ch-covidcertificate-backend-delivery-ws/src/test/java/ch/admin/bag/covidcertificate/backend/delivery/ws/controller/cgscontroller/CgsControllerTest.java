@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeNotFoundException;
+import ch.admin.bag.covidcertificate.backend.delivery.data.util.CodeGenerator;
 import ch.admin.bag.covidcertificate.backend.delivery.model.cgs.CgsCovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.controller.BaseControllerTest;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.Action;
@@ -45,7 +46,7 @@ public abstract class CgsControllerTest extends BaseControllerTest {
 
     @Test
     public void testUpload() throws Exception {
-        final String code = "7A1BIK2";
+        final String code = CodeGenerator.generateCode();
 
         // verify no covid cert uploaded
         assertThrows(CodeNotFoundException.class, () -> deliveryDataService.findCovidCerts(code));

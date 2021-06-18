@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeNotFoundException;
+import ch.admin.bag.covidcertificate.backend.delivery.data.util.CodeGenerator;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCertDelivery;
@@ -26,6 +27,7 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
+import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -61,7 +63,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
 
     @Test
     public void registrationCodeReleasedTest() throws Exception {
-        final String code = "ABCDEFGHI";
+        final String code = CodeGenerator.generateCode();
 
         DeliveryRegistration registration =
                 getDeliveryRegistration(Action.REGISTER, code, Instant.now(), this.algorithm);
@@ -86,7 +88,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
 
     @Test
     public void registrationInvalidActionTest() throws Exception {
-        final String code = "A1B2C3D4E";
+        final String code = CodeGenerator.generateCode();
 
         // invalid action
         for (Action action : Action.values()) {
@@ -105,7 +107,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
 
     @Test
     public void registrationInvalidSignatureTest() throws Exception {
-        final String code = "Z19NILH";
+        final String code = CodeGenerator.generateCode();
 
         DeliveryRegistration registration =
                 getDeliveryRegistration(Action.GET, code, Instant.now(), this.algorithm);
@@ -124,7 +126,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
 
     @Test
     public void registrationInvalidPublicKey() throws Exception {
-        final String code = "Q58RTS";
+        final String code = CodeGenerator.generateCode();
 
         // invalid public key
         DeliveryRegistration registration =
@@ -151,7 +153,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
 
     @Test
     public void deliveryFlowTest() throws Exception {
-        final String code = "YQO15A9";
+        final String code = CodeGenerator.generateCode();
 
         // register
         registerForDelivery(
@@ -212,6 +214,22 @@ public abstract class AppControllerTest extends BaseControllerTest {
         assertFalse(deliveryDataService.transferCodeExists(code));
     }
 
+    @Test
+    public void invalidCodeLengthTest() throws Exception {
+        for (String invalidCode : List.of("TOOSHORT", "TOOLONG000")) {
+            DeliveryRegistration registration =
+                    getDeliveryRegistration(
+                            Action.REGISTER, invalidCode, Instant.now(), this.algorithm);
+            // code collision
+            mockMvc.perform(
+                            post(INIT_ENDPOINT)
+                                    .content(asJsonString(registration))
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .accept(acceptMediaType))
+                    .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
+        }
+    }
+
     private MockHttpServletResponse getCovidCert(String code) throws Exception {
         MockHttpServletResponse response =
                 mockMvc.perform(
@@ -233,7 +251,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
 
     @Test
     public void forbiddenTest() throws Exception {
-        final String code = "PP726Q";
+        final String code = CodeGenerator.generateCode();
 
         // register
         registerForDelivery(

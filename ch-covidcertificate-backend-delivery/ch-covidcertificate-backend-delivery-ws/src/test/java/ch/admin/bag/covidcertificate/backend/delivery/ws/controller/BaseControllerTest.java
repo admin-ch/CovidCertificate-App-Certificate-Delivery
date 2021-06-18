@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import ch.admin.bag.covidcertificate.backend.delivery.data.DeliveryDataService;
+import ch.admin.bag.covidcertificate.backend.delivery.data.util.CodeGenerator;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistration;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.Action;
@@ -76,7 +77,7 @@ public abstract class BaseControllerTest {
     protected MediaType acceptMediaType;
     protected Algorithm algorithm;
 
-    protected static final String UNREGISTERED_CODE = "NWIKX22";
+    protected static final String UNREGISTERED_CODE = CodeGenerator.generateCode();
     protected static final String DUMMY_HCERT = "dummyhcert";
     protected static final String DUMMY_PDF = "dummypdf";
 
