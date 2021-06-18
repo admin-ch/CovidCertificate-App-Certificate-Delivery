@@ -83,6 +83,14 @@
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-web</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>ch.admin.bag.covidcertificate</groupId>
+            <artifactId>ch-covidcertificate-backend-delivery-data</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
@@ -156,9 +164,9 @@
                     </controllers>
                     <description>CH Covidcertificate Delivery API</description>
                     <apiUrls>
-                        <apiUrl>https://www.cc-d.bit.admin.ch</apiUrl>
-                        <apiUrl>https://www.cc-a.bit.admin.ch</apiUrl>
-                        <apiUrl>https://www.cc.bit.admin.ch</apiUrl>
+                        <apiUrl>https://covidcertificate-app-d.bit.admin.ch</apiUrl>
+                        <apiUrl>https://covidcertificate-app-a.bit.admin.ch</apiUrl>
+                        <apiUrl>https://covidcertificate-app.bit.admin.ch</apiUrl>
                     </apiUrls>
                     <title>CH Covidcertificate Delivery API</title>
                 </configuration>

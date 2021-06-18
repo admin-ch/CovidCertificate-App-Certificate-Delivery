@@ -19,7 +19,9 @@ import ch.admin.bag.covidcertificate.backend.delivery.data.config.FlyWayConfig;
 import ch.admin.bag.covidcertificate.backend.delivery.data.config.PostgresDataConfig;
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeAlreadyExistsException;
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeNotFoundException;
+import ch.admin.bag.covidcertificate.backend.delivery.data.util.CodeGenerator;
 import ch.admin.bag.covidcertificate.backend.delivery.data.util.PostgresDbCleaner;
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistration;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration;
@@ -42,7 +44,7 @@ public class DeliveryDataServiceTest {
 
     @Autowired private DeliveryDataService deliveryDataService;
 
-    public static final String CODE = "1A2B3C4D5";
+    public static final String CODE = CodeGenerator.generateCode();
     public static final String PUBLIC_KEY = "public_key";
 
     @Test
@@ -65,6 +67,7 @@ public class DeliveryDataServiceTest {
         DeliveryRegistration registration = new DeliveryRegistration();
         registration.setCode(code);
         registration.setPublicKey(PUBLIC_KEY);
+        registration.setAlgorithm(Algorithm.EC256);
         return registration;
     }
 

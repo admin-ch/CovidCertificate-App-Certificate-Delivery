@@ -1,12 +1,14 @@
 package ch.admin.bag.covidcertificate.backend.delivery.model.db;
 
-import java.time.LocalDateTime;
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
+import java.time.Instant;
 
 public class DbTransfer {
     private Integer pk;
-    private LocalDateTime createdAt;
+    private Instant createdAt;
     private String code;
     private String publicKey;
+    private Algorithm algorithm;
 
     public Integer getPk() {
         return pk;
@@ -16,11 +18,11 @@ public class DbTransfer {
         this.pk = pk;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }
 
@@ -38,5 +40,13 @@ public class DbTransfer {
 
     public void setPublicKey(String publicKey) {
         this.publicKey = publicKey;
+    }
+
+    public Algorithm getAlgorithm() {
+        return algorithm;
+    }
+
+    public void setAlgorithm(Algorithm algorithm) {
+        this.algorithm = algorithm;
     }
 }

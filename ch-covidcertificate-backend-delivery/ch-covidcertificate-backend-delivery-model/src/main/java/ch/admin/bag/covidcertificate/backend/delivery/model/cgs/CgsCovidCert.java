@@ -2,6 +2,7 @@ package ch.admin.bag.covidcertificate.backend.delivery.model.cgs;
 
 import ch.ubique.openapi.docannotations.Documentation;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 public class CgsCovidCert {
     @Documentation(
@@ -9,9 +10,10 @@ public class CgsCovidCert {
                     "client generated alpha numeric code used as identifier during the entire transfer",
             example = "A7KBZ91XL")
     @NotNull
+    @Size(min = 9, max = 9)
     private String code;
 
-    @Documentation(description = "covidcert hcert. HC1:<base64>")
+    @Documentation(description = "covidcert hcert. HC1:<base45>")
     @NotNull
     private String hcert;
 

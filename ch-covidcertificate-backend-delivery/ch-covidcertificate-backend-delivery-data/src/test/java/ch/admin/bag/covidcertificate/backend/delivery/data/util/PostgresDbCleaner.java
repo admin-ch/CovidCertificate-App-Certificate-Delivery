@@ -13,7 +13,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 public class PostgresDbCleaner implements BeforeEachCallback {
 
-    private final List<String> tablesToIgnore =
+    private static final List<String> TABLES_TO_IGNORE =
             List.of(
                     "public.databasechangelog",
                     "public.databasechangeloglock",
@@ -26,14 +26,14 @@ public class PostgresDbCleaner implements BeforeEachCallback {
         cleanDatabase(dataSource.getConnection());
     }
 
-    private void cleanDatabase(Connection connection) throws SQLException {
+    public static void cleanDatabase(Connection connection) throws SQLException {
         PreparedStatement preparedStatement =
                 connection.prepareStatement(
                         "truncate " + String.join(",", loadTablesToClean(connection)));
         preparedStatement.execute();
     }
 
-    private List<String> loadTablesToClean(Connection connection) throws SQLException {
+    private static List<String> loadTablesToClean(Connection connection) throws SQLException {
         List<String> tablesToClean = new ArrayList<>();
         ResultSet rs =
                 connection
@@ -41,7 +41,7 @@ public class PostgresDbCleaner implements BeforeEachCallback {
                         .getTables(connection.getCatalog(), null, null, new String[] {"TABLE"});
         while (rs.next()) {
             String table = rs.getString("TABLE_SCHEM") + "." + rs.getString("TABLE_NAME");
-            if (!tablesToIgnore.contains(table)) {
+            if (!TABLES_TO_IGNORE.contains(table)) {
                 tablesToClean.add(table);
             }
         }

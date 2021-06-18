@@ -1,11 +1,11 @@
 package ch.admin.bag.covidcertificate.backend.delivery.model.db;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public class DbCovidCert {
     private Integer pk;
     private Integer fkTransfer;
-    private LocalDateTime createdAt;
+    private Instant createdAt;
     private String encryptedHcert;
     private String encryptedPdf;
 
@@ -25,11 +25,11 @@ public class DbCovidCert {
         this.fkTransfer = fkTransfer;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }
 
