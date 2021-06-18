@@ -52,12 +52,12 @@ public class RsaCrypto extends Crypto {
         rsa.init(Cipher.ENCRYPT_MODE, rsaPubKey);
 
         // combine key and IV
-        var bytesAndIv = new byte[secretBytes.length + customIV.length];
-        System.arraycopy(secretBytes, 0, bytesAndIv, 0, secretBytes.length);
-        System.arraycopy(customIV, 0, bytesAndIv, secretBytes.length, customIV.length);
+        var ivAndBytes = new byte[customIV.length + secretBytes.length];
+        System.arraycopy(customIV, 0, ivAndBytes, 0, customIV.length);
+        System.arraycopy(secretBytes, 0, ivAndBytes, customIV.length, secretBytes.length);
 
         // encrypt secretkey with public key
-        var encryptedKey = rsa.doFinal(bytesAndIv);
+        var encryptedKey = rsa.doFinal(ivAndBytes);
 
         // copy all data into one array
         var all = new byte[encryptedData.length + encryptedKey.length];
