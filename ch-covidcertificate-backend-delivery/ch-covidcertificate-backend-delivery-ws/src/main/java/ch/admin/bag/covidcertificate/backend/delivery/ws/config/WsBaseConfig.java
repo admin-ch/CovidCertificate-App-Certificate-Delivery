@@ -32,6 +32,8 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import javax.sql.DataSource;
+import net.javacrumbs.shedlock.core.LockProvider;
+import net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateLockProvider;
 import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +41,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -52,25 +55,20 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
 
     @Value("${ws.jws.password:}")
     public String p12KeyStorePassword;
-
-    @Value(
-            "#{${ws.security.headers: {'X-Content-Type-Options':'nosniff', 'X-Frame-Options':'DENY','X-Xss-Protection':'1; mode=block'}}}")
-    Map<String, String> additionalHeaders;
     // base64 encoded p8 file
     @Value("${push.ios.signingkey}")
     protected String iosPushSigningKey;
-
     @Value("${push.ios.teamid}")
     protected String iosPushTeamId;
-
     @Value("${push.ios.keyid}")
     protected String iosPushKeyId;
-
     @Value("${push.ios.topic}")
     protected String iosPushTopic;
-
     @Value("${push.batchsize:100000}")
     protected int batchSize;
+    @Value(
+            "#{${ws.security.headers: {'X-Content-Type-Options':'nosniff', 'X-Frame-Options':'DENY','X-Xss-Protection':'1; mode=block'}}}")
+    Map<String, String> additionalHeaders;
 
     public abstract DataSource dataSource();
 
@@ -110,6 +108,16 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(securityHeaderInjector());
+    }
+
+    @Bean
+    public LockProvider lockProvider(DataSource dataSource) {
+        return new JdbcTemplateLockProvider(
+                JdbcTemplateLockProvider.Configuration.builder()
+                        .withTableName("t_shedlock")
+                        .withJdbcTemplate(new JdbcTemplate(dataSource))
+                        .usingDbTime()
+                        .build());
     }
 
     @Bean
