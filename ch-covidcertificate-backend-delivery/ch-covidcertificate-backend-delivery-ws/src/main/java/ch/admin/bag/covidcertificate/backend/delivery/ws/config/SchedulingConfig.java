@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 @Configuration
 @EnableScheduling
-@EnableSchedulerLock(defaultLockAtMostFor = "PT10M")
+@EnableSchedulerLock(defaultLockAtMostFor = "PT15M")
 public class SchedulingConfig {
 
     private final IOSHeartbeatSilentPush iosHeartbeatSilentPush;
