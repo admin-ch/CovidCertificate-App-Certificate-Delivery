@@ -14,10 +14,15 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import javax.sql.DataSource;
 import org.apache.logging.log4j.util.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -25,6 +30,8 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.transaction.annotation.Transactional;
 
 public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
+
+    private static final Logger logger = LoggerFactory.getLogger(JdbcDeliveryDataServiceImpl.class);
     private final NamedParameterJdbcTemplate jt;
     private final SimpleJdbcInsert transferInsert;
     private final SimpleJdbcInsert pushRegistrationInsert;
@@ -193,9 +200,22 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
     @Override
     @Transactional(readOnly = false)
     public void cleanDB(Duration retentionPeriod) {
-
+        var retentionTime =
+                LocalDate.now().minus(retentionPeriod.toDays(), ChronoUnit.DAYS).atStartOfDay();
+        logger.info("Cleanup UUID entries before: {}", retentionTime);
+        var selectParams =
+                new MapSqlParameterSource(
+                        "retention_time", Date.from(retentionTime.toInstant(ZoneOffset.UTC)));
+        var oldCodesSql =
+                "select pk_transfer_id from t_transfer where created_at < :retention_time";
+        final List<Integer> codesToRemove =
+                jt.queryForList(oldCodesSql, selectParams, Integer.class);
+        var removeCovidCertsSql = "delete from t_covidcert where fk_transfer_id in (:id_list)";
+        final var deleteParams = new MapSqlParameterSource("id_list", codesToRemove);
+        jt.update(removeCovidCertsSql, deleteParams);
+        var removeTransferCodesSql = "delete from t_transfer where pk_transfer_id in (:id_list)";
+        jt.update(removeTransferCodesSql, deleteParams);
     }
-
 
     private MapSqlParameterSource createPushRegistrationParams(PushRegistration registration) {
         var params = new MapSqlParameterSource();
