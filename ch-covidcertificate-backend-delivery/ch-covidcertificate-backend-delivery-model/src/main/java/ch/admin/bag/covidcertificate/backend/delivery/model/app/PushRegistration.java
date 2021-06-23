@@ -6,6 +6,7 @@ import javax.validation.constraints.NotNull;
 public class PushRegistration {
     @NotNull private String pushToken;
     @NotNull private PushType pushType;
+    @NotNull private String registerId;
     @JsonIgnore private int id;
 
     public String getPushToken() {
@@ -30,5 +31,13 @@ public class PushRegistration {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getRegisterId() {
+        return registerId;
+    }
+
+    public void setRegisterId(String registerId) {
+        this.registerId = registerId;
     }
 }

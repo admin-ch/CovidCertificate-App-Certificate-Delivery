@@ -113,9 +113,9 @@ class DeliveryDataServiceTest {
     void testPushRegistration() throws Exception {
         // insert push registration
         PushRegistration pushRegistration = new PushRegistration();
-        String pushToken = "push_token";
-        pushRegistration.setPushToken(pushToken);
+        pushRegistration.setPushToken("push_token");
         pushRegistration.setPushType(PushType.IOS);
+        pushRegistration.setRegisterId("register_id");
         deliveryDataService.upsertPushRegistration(pushRegistration);
 
         // check push registration added
@@ -136,6 +136,7 @@ class DeliveryDataServiceTest {
         PushRegistration anotherPushRegistration = new PushRegistration();
         anotherPushRegistration.setPushToken("another_push_token");
         anotherPushRegistration.setPushType(PushType.IOS);
+        anotherPushRegistration.setRegisterId("another_register_id");
         deliveryDataService.upsertPushRegistration(anotherPushRegistration);
 
         // check push registration added
@@ -160,8 +161,10 @@ class DeliveryDataServiceTest {
         for (var i = 0; i < 20; i++) {
             PushRegistration pushRegistration = new PushRegistration();
             String pushToken = "push_token_" + i;
+            String registerId = "register_id_" + i;
             pushRegistration.setPushToken(pushToken);
             pushRegistration.setPushType(PushType.IOS);
+            pushRegistration.setRegisterId(registerId);
             deliveryDataService.upsertPushRegistration(pushRegistration);
         }
         int prevMaxId = 0, nextMaxId = 0;

@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import javax.sql.DataSource;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -129,8 +130,16 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
     @Override
     @Transactional(readOnly = false)
     public void upsertPushRegistration(PushRegistration registration) {
+        if (Strings.isBlank(registration.getPushToken())) {
+            removeRegistration(registration.getRegisterId());
+        }
         if (!pushRegistrationExists(registration)) {
             pushRegistrationInsert.execute(createPushRegistrationParams(registration));
+        } else {
+            var sql = "update t_push_registration "
+                + "set push_token = :push_token, register_id = :register_id "
+                + "where push_token = :push_token or register_id = :register_id";
+            jt.update(sql, createPushRegistrationParams(registration));
         }
     }
 
@@ -139,10 +148,17 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
                 "select exists("
                         + "select * from t_push_registration"
                         + " where push_token = :push_token"
-                        + " and push_type = :push_type"
+                        + " or register_id = :register_id"
                         + ")";
         MapSqlParameterSource params = createPushRegistrationParams(registration);
         return jt.queryForObject(sql, params, Boolean.class);
+    }
+
+    @Override
+    @Transactional(readOnly = false)
+    public void removeRegistration(String registerId) {
+        final var sql = "delete from t_push_registration where register_id = :register_id";
+        jt.update(sql, new MapSqlParameterSource("register_id", registerId));
     }
 
     @Override
@@ -174,14 +190,15 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
     }
 
     private MapSqlParameterSource createPushRegistrationParams(PushRegistration registration) {
-        MapSqlParameterSource params = new MapSqlParameterSource();
+        var params = new MapSqlParameterSource();
         params.addValue("push_token", registration.getPushToken());
         params.addValue("push_type", registration.getPushType().name());
+        params.addValue("register_id", registration.getRegisterId());
         return params;
     }
 
     private MapSqlParameterSource createTransferParams(DeliveryRegistration registration) {
-        MapSqlParameterSource params = new MapSqlParameterSource();
+        var params = new MapSqlParameterSource();
         params.addValue("code", registration.getCode());
         params.addValue("public_key", registration.getPublicKey());
         params.addValue("algorithm", registration.getAlgorithm().name());
