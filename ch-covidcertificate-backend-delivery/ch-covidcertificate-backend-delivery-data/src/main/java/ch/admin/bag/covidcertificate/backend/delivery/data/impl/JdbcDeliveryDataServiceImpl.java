@@ -12,6 +12,7 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -188,6 +189,13 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
     public void insertCovidCert(DbCovidCert covidCert) {
         covidCertInsert.execute(createCovidCertParams(covidCert));
     }
+
+    @Override
+    @Transactional(readOnly = false)
+    public void cleanDB(Duration retentionPeriod) {
+
+    }
+
 
     private MapSqlParameterSource createPushRegistrationParams(PushRegistration registration) {
         var params = new MapSqlParameterSource();

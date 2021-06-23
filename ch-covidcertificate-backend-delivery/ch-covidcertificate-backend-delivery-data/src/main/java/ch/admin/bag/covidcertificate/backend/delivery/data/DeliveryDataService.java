@@ -8,6 +8,7 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,4 +38,7 @@ public interface DeliveryDataService {
     List<PushRegistration> getPushRegistrationByType(PushType pushType, int prevMaxId);
 
     public void insertCovidCert(DbCovidCert covidCert);
+
+    @Transactional(readOnly = false)
+    void cleanDB(Duration retentionPeriod);
 }
