@@ -26,7 +26,7 @@ public interface DeliveryDataService {
 
     public void closeTransfer(String code) throws CodeNotFoundException;
 
-    public void insertPushRegistration(PushRegistration registration);
+    public void upsertPushRegistration(PushRegistration registration);
 
     void removeRegistrations(List<String> tokensToRemove);
 

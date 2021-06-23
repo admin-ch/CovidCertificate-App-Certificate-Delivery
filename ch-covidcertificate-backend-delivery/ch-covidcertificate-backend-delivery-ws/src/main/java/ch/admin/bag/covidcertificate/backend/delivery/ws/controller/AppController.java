@@ -177,7 +177,7 @@ public class AppController {
     @CrossOrigin(origins = {"https://editor.swagger.io"})
     @PostMapping(value = "/push/register")
     public ResponseEntity<Void> registerForPush(@Valid @RequestBody PushRegistration registration) {
-        deliveryDataService.insertPushRegistration(registration);
+        deliveryDataService.upsertPushRegistration(registration);
         return ResponseEntity.ok().build();
     }
 

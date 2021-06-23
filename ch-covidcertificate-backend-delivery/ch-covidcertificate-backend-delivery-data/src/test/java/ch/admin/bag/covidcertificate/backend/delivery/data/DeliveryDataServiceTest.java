@@ -116,7 +116,7 @@ class DeliveryDataServiceTest {
         String pushToken = "push_token";
         pushRegistration.setPushToken(pushToken);
         pushRegistration.setPushType(PushType.IOS);
-        deliveryDataService.insertPushRegistration(pushRegistration);
+        deliveryDataService.upsertPushRegistration(pushRegistration);
 
         // check push registration added
         List<PushRegistration> pushRegistrations =
@@ -125,7 +125,7 @@ class DeliveryDataServiceTest {
         assertPushRegistration(pushRegistration, pushRegistrations.get(0));
 
         // insert same push registration again
-        deliveryDataService.insertPushRegistration(pushRegistration);
+        deliveryDataService.upsertPushRegistration(pushRegistration);
 
         // check no change
         pushRegistrations = deliveryDataService.getPushRegistrationByType(PushType.IOS, 0);
@@ -136,7 +136,7 @@ class DeliveryDataServiceTest {
         PushRegistration anotherPushRegistration = new PushRegistration();
         anotherPushRegistration.setPushToken("another_push_token");
         anotherPushRegistration.setPushType(PushType.IOS);
-        deliveryDataService.insertPushRegistration(anotherPushRegistration);
+        deliveryDataService.upsertPushRegistration(anotherPushRegistration);
 
         // check push registration added
         pushRegistrations = deliveryDataService.getPushRegistrationByType(PushType.IOS, 0);
@@ -162,7 +162,7 @@ class DeliveryDataServiceTest {
             String pushToken = "push_token_" + i;
             pushRegistration.setPushToken(pushToken);
             pushRegistration.setPushType(PushType.IOS);
-            deliveryDataService.insertPushRegistration(pushRegistration);
+            deliveryDataService.upsertPushRegistration(pushRegistration);
         }
         int prevMaxId = 0, nextMaxId = 0;
         List<PushRegistration> registrationList;

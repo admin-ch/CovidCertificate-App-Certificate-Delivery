@@ -128,7 +128,7 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
 
     @Override
     @Transactional(readOnly = false)
-    public void insertPushRegistration(PushRegistration registration) {
+    public void upsertPushRegistration(PushRegistration registration) {
         if (!pushRegistrationExists(registration)) {
             pushRegistrationInsert.execute(createPushRegistrationParams(registration));
         }
