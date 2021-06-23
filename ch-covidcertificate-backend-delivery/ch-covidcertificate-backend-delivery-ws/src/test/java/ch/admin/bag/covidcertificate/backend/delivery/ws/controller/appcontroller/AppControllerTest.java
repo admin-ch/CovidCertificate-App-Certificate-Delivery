@@ -41,7 +41,6 @@ public abstract class AppControllerTest extends BaseControllerTest {
     private static final String GET_COVID_CERT_ENDPOINT = BASE_URL + "/covidcert";
     private static final String COMPLETE_ENDPOINT = BASE_URL + "/covidcert/complete";
     private static final String PUSH_REGISTER_ENDPOINT = BASE_URL + "/push/register"; // TODO
-    private static final String PUSH_DEREGISTER_ENDPOINT = BASE_URL + "/push/deregister"; // TODO
 
     @BeforeAll
     public void setup() throws NoSuchAlgorithmException, SQLException {
