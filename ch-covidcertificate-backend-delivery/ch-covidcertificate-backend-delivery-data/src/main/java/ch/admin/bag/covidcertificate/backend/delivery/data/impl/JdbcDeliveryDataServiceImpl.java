@@ -130,7 +130,7 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
     @Override
     @Transactional(readOnly = false)
     public void upsertPushRegistration(PushRegistration registration) {
-        if (Strings.isBlank(registration.getPushToken())) {
+        if (registration.getPushToken() == null || Strings.isBlank(registration.getPushToken())) {
             removeRegistration(registration.getRegisterId());
         }
         if (!pushRegistrationExists(registration)) {

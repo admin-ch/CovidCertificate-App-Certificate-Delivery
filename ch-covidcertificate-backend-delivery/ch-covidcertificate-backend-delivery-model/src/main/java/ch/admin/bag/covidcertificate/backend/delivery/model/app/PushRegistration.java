@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.validation.constraints.NotNull;
 
 public class PushRegistration {
-    @NotNull private String pushToken;
+    private String pushToken;
     @NotNull private PushType pushType;
     @NotNull private String registerId;
     @JsonIgnore private int id;
