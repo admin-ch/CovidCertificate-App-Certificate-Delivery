@@ -181,17 +181,6 @@ public class AppController {
         return ResponseEntity.ok().build();
     }
 
-    @Documentation(
-            description = "push deregistration endpoint",
-            responses = {"200 => push registration removed successfully"})
-    @CrossOrigin(origins = {"https://editor.swagger.io"})
-    @PostMapping(value = "/push/deregister")
-    public ResponseEntity<Void> deregisterForPush(
-            @Valid @RequestBody PushRegistration registration) {
-        deliveryDataService.removeRegistrations(List.of(registration.getPushToken()));
-        return ResponseEntity.ok().build();
-    }
-
     private boolean isRegisterRequest(HttpServletRequest req) {
         return req.getRequestURL().toString().endsWith("/app/delivery/v1/covidcert/register");
     }
