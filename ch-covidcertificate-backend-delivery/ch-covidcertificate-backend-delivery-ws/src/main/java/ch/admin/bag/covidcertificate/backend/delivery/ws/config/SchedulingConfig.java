@@ -37,7 +37,7 @@ public class SchedulingConfig {
         iosHeartbeatSilentPush.sendHeartbeats();
     }
 
-    @Scheduled(cron = "${db.cleanCron:0 0 * * * ?}", zone = "UTC")
+    @Scheduled(cron = "${db.cleanCron:0 0 0 ? * 2/7}")
     public void cleanCodes() {
         try {
             logger.info(
