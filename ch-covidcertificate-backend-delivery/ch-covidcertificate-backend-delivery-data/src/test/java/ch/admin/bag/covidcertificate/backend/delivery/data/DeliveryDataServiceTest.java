@@ -26,6 +26,8 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistration;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
+import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
+import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -197,5 +199,23 @@ class DeliveryDataServiceTest {
         assertEquals(expected.getPushToken(), actual.getPushToken());
         assertEquals(expected.getPushType(), actual.getPushType());
         assertEquals(expected.getRegisterId(), actual.getRegisterId());
+    }
+
+    @Test
+    void testCleanDB() throws CodeAlreadyExistsException, CodeNotFoundException {
+        // init transfer
+        DeliveryRegistration registration = getDeliveryRegistration(CODE);
+        deliveryDataService.initTransfer(registration);
+        // insert covid cert
+        var dbCovidCert = new DbCovidCert();
+        dbCovidCert.setFkTransfer(deliveryDataService.findPkTransferId(CODE));
+        dbCovidCert.setEncryptedHcert("hcert");
+        dbCovidCert.setEncryptedPdf("pdf");
+        deliveryDataService.insertCovidCert(dbCovidCert);
+        assertEquals(1, deliveryDataService.findCovidCerts(CODE).size());
+        // delete everything
+        deliveryDataService.cleanDB(Duration.ofDays(-1));
+        assertThrows(CodeNotFoundException.class, () -> deliveryDataService.findTransfer(CODE));
+        assertThrows(CodeNotFoundException.class, () -> deliveryDataService.findCovidCerts(CODE));
     }
 }
