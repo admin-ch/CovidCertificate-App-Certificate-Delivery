@@ -132,13 +132,13 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
     public void upsertPushRegistration(PushRegistration registration) {
         if (registration.getPushToken() == null || Strings.isBlank(registration.getPushToken())) {
             removeRegistration(registration.getRegisterId());
-        }
-        if (!pushRegistrationExists(registration)) {
+        } else if (!pushRegistrationExists(registration)) {
             pushRegistrationInsert.execute(createPushRegistrationParams(registration));
         } else {
-            var sql = "update t_push_registration "
-                + "set push_token = :push_token, register_id = :register_id "
-                + "where push_token = :push_token or register_id = :register_id";
+            var sql =
+                    "update t_push_registration "
+                            + "set push_token = :push_token, register_id = :register_id "
+                            + "where push_token = :push_token or register_id = :register_id";
             jt.update(sql, createPushRegistrationParams(registration));
         }
     }
