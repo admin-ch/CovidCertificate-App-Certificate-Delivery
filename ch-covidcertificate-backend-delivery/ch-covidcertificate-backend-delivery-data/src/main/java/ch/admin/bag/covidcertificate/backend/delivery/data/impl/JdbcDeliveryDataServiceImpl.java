@@ -200,21 +200,13 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
     @Override
     @Transactional(readOnly = false)
     public void cleanDB(Duration retentionPeriod) {
+        var sql = "delete from t_transfer where created_at < :retention_time";
         var retentionTime =
                 LocalDate.now().minus(retentionPeriod.toDays(), ChronoUnit.DAYS).atStartOfDay();
-        logger.info("Cleanup UUID entries before: {}", retentionTime);
-        var selectParams =
+        var params =
                 new MapSqlParameterSource(
                         "retention_time", Date.from(retentionTime.toInstant(ZoneOffset.UTC)));
-        var oldCodesSql =
-                "select pk_transfer_id from t_transfer where created_at < :retention_time";
-        final List<Integer> codesToRemove =
-                jt.queryForList(oldCodesSql, selectParams, Integer.class);
-        var removeCovidCertsSql = "delete from t_covidcert where fk_transfer_id in (:id_list)";
-        final var deleteParams = new MapSqlParameterSource("id_list", codesToRemove);
-        jt.update(removeCovidCertsSql, deleteParams);
-        var removeTransferCodesSql = "delete from t_transfer where pk_transfer_id in (:id_list)";
-        jt.update(removeTransferCodesSql, deleteParams);
+        jt.update(sql, params);
     }
 
     private MapSqlParameterSource createPushRegistrationParams(PushRegistration registration) {
