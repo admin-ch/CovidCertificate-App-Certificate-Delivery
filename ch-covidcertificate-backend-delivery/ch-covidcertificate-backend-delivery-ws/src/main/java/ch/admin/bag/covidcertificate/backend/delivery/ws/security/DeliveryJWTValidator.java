@@ -28,7 +28,8 @@ public class DeliveryJWTValidator implements OAuth2TokenValidator<Jwt> {
                             new OAuth2Error(OAuth2ErrorCodes.INVALID_SCOPE));
                 }
             } catch (JsonProcessingException e) {
-                e.printStackTrace();
+                return OAuth2TokenValidatorResult.failure(
+                        new OAuth2Error(OAuth2ErrorCodes.INVALID_SCOPE));
             }
         }
         return OAuth2TokenValidatorResult.failure(new OAuth2Error(OAuth2ErrorCodes.INVALID_SCOPE));
