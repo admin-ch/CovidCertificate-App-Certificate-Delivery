@@ -1,7 +1,9 @@
 package ch.admin.bag.covidcertificate.backend.delivery.ws.security;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
@@ -14,22 +16,28 @@ public class DeliveryJWTValidator implements OAuth2TokenValidator<Jwt> {
 
     @Override
     public OAuth2TokenValidatorResult validate(Jwt token) {
+
         final var containsClaim = token.containsClaim("resource_access");
         if (Boolean.TRUE.equals(containsClaim)) {
             final var claimMap = token.getClaimAsString("resource_access");
             try {
-                if (objectMapper
-                        .readTree(claimMap)
-                        .get("ch-covidcertificate-backend-delivery-ws")
-                        .get("roles")
-                        .asText()
-                        .contains("certificatecreator")) {
+                final var roles =
+                        objectMapper
+                                .readTree(claimMap)
+                                .at("/ch-covidcertificate-backend-delivery-ws/roles");
+                if (!roles.isArray()) {
                     return OAuth2TokenValidatorResult.failure(
-                            new OAuth2Error(OAuth2ErrorCodes.INVALID_SCOPE));
+                            new OAuth2Error(OAuth2ErrorCodes.INVALID_TOKEN));
+                }
+                final var arrayNode = (ArrayNode) roles;
+                for (JsonNode element : arrayNode) {
+                    if ("certificatecreator".equals(element.textValue())) {
+                        return OAuth2TokenValidatorResult.success();
+                    }
                 }
             } catch (JsonProcessingException e) {
                 return OAuth2TokenValidatorResult.failure(
-                        new OAuth2Error(OAuth2ErrorCodes.INVALID_SCOPE));
+                        new OAuth2Error(OAuth2ErrorCodes.INVALID_TOKEN));
             }
         }
         return OAuth2TokenValidatorResult.failure(new OAuth2Error(OAuth2ErrorCodes.INVALID_SCOPE));

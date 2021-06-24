@@ -12,13 +12,8 @@ package ch.admin.bag.covidcertificate.backend.delivery.ws.config;
 
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.DeliveryJWTValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-import javax.validation.executable.ValidateOnExecution;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,7 +23,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 
 @Configuration
@@ -38,10 +35,10 @@ public class JwtConfig extends WebSecurityConfigurerAdapter {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${ws.jws.url:https://identity-r.bit.admin.ch/realms/BAG-CovidCertificate/.well-known/openid-configuration}")
+    @Value("${ws.jws.url}")
     private String url;
 
-  @Override
+    @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -51,7 +48,7 @@ public class JwtConfig extends WebSecurityConfigurerAdapter {
                 .cors()
                 .and()
                 .authorizeRequests()
-                .antMatchers(HttpMethod.POST, "/app/delivery/v1/**")
+                .antMatchers(HttpMethod.POST, "/cgs/delivery/v1/**")
                 .authenticated()
                 .anyRequest()
                 .permitAll()
@@ -71,7 +68,9 @@ public class JwtConfig extends WebSecurityConfigurerAdapter {
         var jsonurl = new URL(url);
         final String jswUrl = objectMapper.readTree(jsonurl).get("jwks_uri").asText();
         final var nimbusJwtDecoder = NimbusJwtDecoder.withJwkSetUri(jswUrl).build();
-        nimbusJwtDecoder.setJwtValidator(jwtValidator());
+        nimbusJwtDecoder.setJwtValidator(
+                new DelegatingOAuth2TokenValidator<>(
+                        JwtValidators.createDefault(), jwtValidator()));
         return nimbusJwtDecoder;
     }
 }
