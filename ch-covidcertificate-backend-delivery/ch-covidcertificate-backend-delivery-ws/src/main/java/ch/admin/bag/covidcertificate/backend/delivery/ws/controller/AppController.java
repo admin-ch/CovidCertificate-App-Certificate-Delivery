@@ -177,18 +177,7 @@ public class AppController {
     @CrossOrigin(origins = {"https://editor.swagger.io"})
     @PostMapping(value = "/push/register")
     public ResponseEntity<Void> registerForPush(@Valid @RequestBody PushRegistration registration) {
-        deliveryDataService.insertPushRegistration(registration);
-        return ResponseEntity.ok().build();
-    }
-
-    @Documentation(
-            description = "push deregistration endpoint",
-            responses = {"200 => push registration removed successfully"})
-    @CrossOrigin(origins = {"https://editor.swagger.io"})
-    @PostMapping(value = "/push/deregister")
-    public ResponseEntity<Void> deregisterForPush(
-            @Valid @RequestBody PushRegistration registration) {
-        deliveryDataService.removeRegistrations(List.of(registration.getPushToken()));
+        deliveryDataService.upsertPushRegistration(registration);
         return ResponseEntity.ok().build();
     }
 

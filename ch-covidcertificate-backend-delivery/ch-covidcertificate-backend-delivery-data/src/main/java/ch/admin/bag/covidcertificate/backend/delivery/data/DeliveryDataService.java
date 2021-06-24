@@ -10,6 +10,7 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
 import java.time.Instant;
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface DeliveryDataService {
     public void initTransfer(DeliveryRegistration registration) throws CodeAlreadyExistsException;
@@ -26,7 +27,10 @@ public interface DeliveryDataService {
 
     public void closeTransfer(String code) throws CodeNotFoundException;
 
-    public void insertPushRegistration(PushRegistration registration);
+    public void upsertPushRegistration(PushRegistration registration);
+
+    @Transactional(readOnly = false)
+    void removeRegistration(String registerId);
 
     void removeRegistrations(List<String> tokensToRemove);
 

@@ -47,11 +47,10 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 @TestPropertySource(properties = {"push.batchsize=3"})
 class DeliveryDataServiceTest {
 
-    @Autowired private DeliveryDataService deliveryDataService;
-
     public static final String CODE = CodeGenerator.generateCode();
     public static final String PUBLIC_KEY = "public_key";
     protected final Logger logger = LoggerFactory.getLogger(getClass());
+    @Autowired private DeliveryDataService deliveryDataService;
 
     @Value("${push.batchsize}")
     private int batchsize;
@@ -113,10 +112,10 @@ class DeliveryDataServiceTest {
     void testPushRegistration() throws Exception {
         // insert push registration
         PushRegistration pushRegistration = new PushRegistration();
-        String pushToken = "push_token";
-        pushRegistration.setPushToken(pushToken);
+        pushRegistration.setPushToken("push_token");
         pushRegistration.setPushType(PushType.IOS);
-        deliveryDataService.insertPushRegistration(pushRegistration);
+        pushRegistration.setRegisterId("register_id");
+        deliveryDataService.upsertPushRegistration(pushRegistration);
 
         // check push registration added
         List<PushRegistration> pushRegistrations =
@@ -125,7 +124,7 @@ class DeliveryDataServiceTest {
         assertPushRegistration(pushRegistration, pushRegistrations.get(0));
 
         // insert same push registration again
-        deliveryDataService.insertPushRegistration(pushRegistration);
+        deliveryDataService.upsertPushRegistration(pushRegistration);
 
         // check no change
         pushRegistrations = deliveryDataService.getPushRegistrationByType(PushType.IOS, 0);
@@ -136,7 +135,8 @@ class DeliveryDataServiceTest {
         PushRegistration anotherPushRegistration = new PushRegistration();
         anotherPushRegistration.setPushToken("another_push_token");
         anotherPushRegistration.setPushType(PushType.IOS);
-        deliveryDataService.insertPushRegistration(anotherPushRegistration);
+        anotherPushRegistration.setRegisterId("another_register_id");
+        deliveryDataService.upsertPushRegistration(anotherPushRegistration);
 
         // check push registration added
         pushRegistrations = deliveryDataService.getPushRegistrationByType(PushType.IOS, 0);
@@ -153,6 +153,14 @@ class DeliveryDataServiceTest {
         // check push registration pk_id
         pushRegistrations = deliveryDataService.getPushRegistrationByType(PushType.IOS, 100);
         assertTrue(pushRegistrations.isEmpty());
+
+        // remove another push registration
+        anotherPushRegistration.setPushToken("");
+        deliveryDataService.upsertPushRegistration(anotherPushRegistration);
+
+        // check push registration removed
+        pushRegistrations = deliveryDataService.getPushRegistrationByType(PushType.IOS, 0);
+        assertTrue(pushRegistrations.isEmpty());
     }
 
     @Test
@@ -160,9 +168,11 @@ class DeliveryDataServiceTest {
         for (var i = 0; i < 20; i++) {
             PushRegistration pushRegistration = new PushRegistration();
             String pushToken = "push_token_" + i;
+            String registerId = "register_id_" + i;
             pushRegistration.setPushToken(pushToken);
             pushRegistration.setPushType(PushType.IOS);
-            deliveryDataService.insertPushRegistration(pushRegistration);
+            pushRegistration.setRegisterId(registerId);
+            deliveryDataService.upsertPushRegistration(pushRegistration);
         }
         int prevMaxId = 0, nextMaxId = 0;
         List<PushRegistration> registrationList;
@@ -186,5 +196,6 @@ class DeliveryDataServiceTest {
     private void assertPushRegistration(PushRegistration expected, PushRegistration actual) {
         assertEquals(expected.getPushToken(), actual.getPushToken());
         assertEquals(expected.getPushType(), actual.getPushType());
+        assertEquals(expected.getRegisterId(), actual.getRegisterId());
     }
 }
