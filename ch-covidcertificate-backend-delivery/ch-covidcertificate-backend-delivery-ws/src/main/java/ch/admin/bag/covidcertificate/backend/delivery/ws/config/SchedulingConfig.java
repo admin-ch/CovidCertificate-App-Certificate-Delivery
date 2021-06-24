@@ -37,7 +37,8 @@ public class SchedulingConfig {
         iosHeartbeatSilentPush.sendHeartbeats();
     }
 
-    @Scheduled(cron = "${db.cleanCron:0 0 0 ? * 2/7}")
+    @Scheduled(cron = "${db.cleanCron:0 0 0 ? * *}")
+    @SchedulerLock(name = "db_cleanup", lockAtLeastFor = "PT10S")
     public void cleanCodes() {
         try {
             logger.info(
