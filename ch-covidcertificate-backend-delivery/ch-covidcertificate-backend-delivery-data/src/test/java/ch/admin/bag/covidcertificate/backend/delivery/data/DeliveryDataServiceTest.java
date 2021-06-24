@@ -47,11 +47,10 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 @TestPropertySource(properties = {"push.batchsize=3"})
 class DeliveryDataServiceTest {
 
-    @Autowired private DeliveryDataService deliveryDataService;
-
     public static final String CODE = CodeGenerator.generateCode();
     public static final String PUBLIC_KEY = "public_key";
     protected final Logger logger = LoggerFactory.getLogger(getClass());
+    @Autowired private DeliveryDataService deliveryDataService;
 
     @Value("${push.batchsize}")
     private int batchsize;
@@ -154,6 +153,14 @@ class DeliveryDataServiceTest {
         // check push registration pk_id
         pushRegistrations = deliveryDataService.getPushRegistrationByType(PushType.IOS, 100);
         assertTrue(pushRegistrations.isEmpty());
+
+        // remove another push registration
+        anotherPushRegistration.setPushToken("");
+        deliveryDataService.upsertPushRegistration(anotherPushRegistration);
+
+        // check push registration removed
+        pushRegistrations = deliveryDataService.getPushRegistrationByType(PushType.IOS, 0);
+        assertTrue(pushRegistrations.isEmpty());
     }
 
     @Test
@@ -189,5 +196,6 @@ class DeliveryDataServiceTest {
     private void assertPushRegistration(PushRegistration expected, PushRegistration actual) {
         assertEquals(expected.getPushToken(), actual.getPushToken());
         assertEquals(expected.getPushType(), actual.getPushType());
+        assertEquals(expected.getRegisterId(), actual.getRegisterId());
     }
 }

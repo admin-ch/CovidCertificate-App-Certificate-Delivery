@@ -15,6 +15,8 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCertDelivery;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistration;
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration;
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.RequestDeliveryPayload;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
@@ -389,5 +391,29 @@ public abstract class AppControllerTest extends BaseControllerTest {
     @Override
     protected MediaType getSecurityHeadersRequestMediaType() {
         return this.acceptMediaType;
+    }
+
+    @Test
+    public void registerTest() throws Exception {
+        var registration = new PushRegistration();
+        registration.setPushToken("pushtoken");
+        registration.setPushType(PushType.AND);
+        registration.setRegisterId("registration_id");
+        mockMvc.perform(
+                        post(PUSH_REGISTER_ENDPOINT)
+                                .content(asJsonString(registration))
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        final var pushRegistrations =
+                deliveryDataService.getPushRegistrationByType(PushType.AND, 0);
+        assertEquals(1, pushRegistrations.size());
+        assertEquals("registration_id", pushRegistrations.get(0).getRegisterId());
+        registration.setPushToken("");
+        mockMvc.perform(
+                        post(PUSH_REGISTER_ENDPOINT)
+                                .content(asJsonString(registration))
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertTrue(deliveryDataService.getPushRegistrationByType(PushType.AND, 0).isEmpty());
     }
 }
