@@ -52,9 +52,9 @@ public class AppController {
     private static final Logger logger = LoggerFactory.getLogger(AppController.class);
 
     protected final DeliveryDataService deliveryDataService;
-    private final SignaturePayloadValidator signaturePayloadValidator;
     protected final Crypto ecCrypto;
     protected final Crypto rsaCrypto;
+    private final SignaturePayloadValidator signaturePayloadValidator;
 
     public AppController(
             DeliveryDataService deliveryDataService,
@@ -132,17 +132,13 @@ public class AppController {
     @CrossOrigin(origins = {"https://editor.swagger.io"})
     @PostMapping(value = "/covidcert/complete")
     public ResponseEntity<Void> covidCertDeliveryComplete(
-            @Valid @RequestBody RequestDeliveryPayload payload) {
-        try {
-            validateSignature(
-                    payload.getCode(), payload.getSignaturePayload(), payload.getSignature());
-            signaturePayloadValidator.validate(
-                    payload.getSignaturePayload(), Action.DELETE, payload.getCode());
-            deliveryDataService.closeTransfer(payload.getCode());
-        } catch (Exception e) {
-            // do nothing. best effort only.
-            logger.info("failed to delete/clean transfer", e);
-        }
+            @Valid @RequestBody RequestDeliveryPayload payload)
+            throws InvalidPublicKeyException, InvalidSignatureException, CodeNotFoundException,
+                    InvalidActionException, InvalidSignaturePayloadException {
+        validateSignature(payload.getCode(), payload.getSignaturePayload(), payload.getSignature());
+        signaturePayloadValidator.validate(
+                payload.getSignaturePayload(), Action.DELETE, payload.getCode());
+        deliveryDataService.closeTransfer(payload.getCode());
         return ResponseEntity.ok().build();
     }
 

@@ -205,8 +205,9 @@ public abstract class AppControllerTest extends BaseControllerTest {
         assertEquals(1, deliveryDataService.findCovidCerts(code).size());
 
         // complete transfer
-        completeTransfer(
-                getRequestDeliveryPayload(Action.DELETE, code, Instant.now(), this.algorithm));
+        final var requestDeliveryPayload =
+                getRequestDeliveryPayload(Action.DELETE, code, Instant.now(), this.algorithm);
+        completeTransfer(requestDeliveryPayload);
 
         // verify transfer is closed
         assertThrows(CodeNotFoundException.class, () -> deliveryDataService.findCovidCerts(code));
@@ -262,7 +263,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
         internalForbiddenTest(code, Action.GET, GET_COVID_CERT_ENDPOINT, HttpStatus.FORBIDDEN);
 
         // forbidden tests for delete (since best effort, it always returns OK)
-        internalForbiddenTest(code, Action.DELETE, COMPLETE_ENDPOINT, HttpStatus.OK);
+        internalForbiddenTest(code, Action.DELETE, COMPLETE_ENDPOINT, HttpStatus.FORBIDDEN);
     }
 
     private void internalForbiddenTest(
@@ -341,11 +342,10 @@ public abstract class AppControllerTest extends BaseControllerTest {
 
     private void completeTransfer(RequestDeliveryPayload payload) throws Exception {
         mockMvc.perform(
-                        post(COMPLETE_ENDPOINT)
-                                .content(asJsonString(payload))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .accept(acceptMediaType))
-                .andExpect(status().is2xxSuccessful());
+                post(COMPLETE_ENDPOINT)
+                        .content(asJsonString(payload))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(acceptMediaType));
     }
 
     private RequestDeliveryPayload getDeliveryCompletePayload(DeliveryRegistration registration)
