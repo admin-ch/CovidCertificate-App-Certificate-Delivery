@@ -22,7 +22,8 @@ public class SchedulingConfig {
     private final DeliveryDataService deliveryDataService;
 
     @Value("${db.retentionPeriod:10}")
-    private Integer retentionPeriod;
+    @Value("${db.retentionPeriod:P10D}")
+    private Duration retentionPeriod;
 
     public SchedulingConfig(
             IOSHeartbeatSilentPush iosHeartbeatSilentPush,
