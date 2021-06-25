@@ -263,7 +263,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
         internalForbiddenTest(code, Action.GET, GET_COVID_CERT_ENDPOINT, HttpStatus.FORBIDDEN);
 
         // forbidden tests for delete (since best effort, it always returns OK)
-        internalForbiddenTest(code, Action.DELETE, COMPLETE_ENDPOINT, HttpStatus.OK);
+        internalForbiddenTest(code, Action.DELETE, COMPLETE_ENDPOINT, HttpStatus.FORBIDDEN);
     }
 
     private void internalForbiddenTest(
