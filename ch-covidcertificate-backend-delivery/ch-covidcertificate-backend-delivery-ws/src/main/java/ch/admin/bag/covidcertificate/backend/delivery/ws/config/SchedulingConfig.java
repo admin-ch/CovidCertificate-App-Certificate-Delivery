@@ -21,7 +21,6 @@ public class SchedulingConfig {
     private final IOSHeartbeatSilentPush iosHeartbeatSilentPush;
     private final DeliveryDataService deliveryDataService;
 
-    @Value("${db.retentionPeriod:10}")
     @Value("${db.retentionPeriod:P10D}")
     private Duration retentionPeriod;
 
@@ -32,19 +31,21 @@ public class SchedulingConfig {
         this.deliveryDataService = deliveryDataService;
     }
 
+    // Runs the method every 2 hours starting at 0am, of every day
     @Scheduled(cron = "${push.ios.cron:0 0 0/2 ? * *}")
     @SchedulerLock(name = "silent_push", lockAtLeastFor = "PT15S")
     public void iosHeartbeat() {
         iosHeartbeatSilentPush.sendHeartbeats();
     }
 
+    // Runs the method every day at 00:00:00am
     @Scheduled(cron = "${db.cleanCron:0 0 0 ? * *}")
     @SchedulerLock(name = "db_cleanup", lockAtLeastFor = "PT10S")
     public void cleanCodes() {
         try {
             logger.info(
                     "Removing transfer codes and related covid certs older than {} days",
-                    retentionPeriod);
+                    retentionPeriod.toDays());
             deliveryDataService.cleanDB(retentionPeriod);
         } catch (Exception e) {
             logger.error("Exception removing old transfer codes and covid certs", e);
