@@ -84,7 +84,6 @@ public class JwtConfig extends WebSecurityConfigurerAdapter {
 
     private String getJwksUrl() throws IOException {
         var jsonurl = new URL(url);
-        final String jwksUrl = objectMapper.readTree(jsonurl).get(jwksUriJsonKey).asText();
-        return jwksUrl;
+        return objectMapper.readTree(jsonurl).get(jwksUriJsonKey).asText();
     }
 }
