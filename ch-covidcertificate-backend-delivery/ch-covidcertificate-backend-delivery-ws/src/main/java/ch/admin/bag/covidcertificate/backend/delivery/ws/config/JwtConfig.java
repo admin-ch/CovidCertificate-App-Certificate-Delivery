@@ -35,8 +35,11 @@ public class JwtConfig extends WebSecurityConfigurerAdapter {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${ws.jws.url}")
+    @Value("${ws.jwt.openid-configuration-url}")
     private String url;
+
+    @Value("${ws.jwt.jwks-json-key:jwks_uri}")
+    private String jwksUriJsonKey;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -65,12 +68,17 @@ public class JwtConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     public JwtDecoder jwtDecoder() throws IOException {
-        var jsonurl = new URL(url);
-        final String jswUrl = objectMapper.readTree(jsonurl).get("jwks_uri").asText();
-        final var nimbusJwtDecoder = NimbusJwtDecoder.withJwkSetUri(jswUrl).build();
+        final var jwksUrl = getJwksUrl();
+        final var nimbusJwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwksUrl).build();
         nimbusJwtDecoder.setJwtValidator(
                 new DelegatingOAuth2TokenValidator<>(
                         JwtValidators.createDefault(), jwtValidator()));
         return nimbusJwtDecoder;
+    }
+
+    private String getJwksUrl() throws IOException {
+        var jsonurl = new URL(url);
+        final String jwksUrl = objectMapper.readTree(jsonurl).get(jwksUriJsonKey).asText();
+        return jwksUrl;
     }
 }
