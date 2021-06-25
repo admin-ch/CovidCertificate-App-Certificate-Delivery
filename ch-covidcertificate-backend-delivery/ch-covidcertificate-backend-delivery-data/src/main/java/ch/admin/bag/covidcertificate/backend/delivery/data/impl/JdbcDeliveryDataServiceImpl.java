@@ -14,15 +14,10 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import javax.sql.DataSource;
 import org.apache.logging.log4j.util.Strings;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -31,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
 
-    private static final Logger logger = LoggerFactory.getLogger(JdbcDeliveryDataServiceImpl.class);
     private final NamedParameterJdbcTemplate jt;
     private final SimpleJdbcInsert transferInsert;
     private final SimpleJdbcInsert pushRegistrationInsert;
@@ -202,9 +196,7 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
     public void cleanDB(Duration retentionPeriod) {
         var sql = "delete from t_transfer where created_at < :retention_time";
         var retentionTime = Instant.now().minus(retentionPeriod);
-        var params =
-                new MapSqlParameterSource(
-                        "retention_time", Date.from(retentionTime));
+        var params = new MapSqlParameterSource("retention_time", Date.from(retentionTime));
         jt.update(sql, params);
     }
 
