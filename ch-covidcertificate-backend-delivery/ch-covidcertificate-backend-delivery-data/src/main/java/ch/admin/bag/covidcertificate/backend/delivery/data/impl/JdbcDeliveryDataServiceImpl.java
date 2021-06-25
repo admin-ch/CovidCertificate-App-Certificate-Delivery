@@ -201,7 +201,7 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
     @Transactional(readOnly = false)
     public void cleanDB(Duration retentionPeriod) {
         var sql = "delete from t_transfer where created_at < :retention_time";
-        var retentionTime = Instant.now().minus(retentionPeriod.toDays(), ChronoUnit.DAYS);
+        var retentionTime = Instant.now().minus(retentionPeriod);
         var params =
                 new MapSqlParameterSource(
                         "retention_time", Date.from(retentionTime));
