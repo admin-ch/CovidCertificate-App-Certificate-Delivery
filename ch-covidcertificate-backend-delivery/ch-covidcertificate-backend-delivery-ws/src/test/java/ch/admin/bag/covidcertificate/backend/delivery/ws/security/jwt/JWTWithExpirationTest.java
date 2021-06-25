@@ -10,7 +10,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"ws.jwt.defaultValidator=true"})
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = {"ws.jwt.defaultValidator=true"})
 class JWTWithExpirationTest extends JWTTestBase {
 
     @Test

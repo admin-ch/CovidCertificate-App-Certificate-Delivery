@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -20,6 +21,7 @@ class JWTNoExpirationTest extends JWTTestBase {
                 mockMvc.perform(
                                 get(BASE_URL)
                                         .accept(MediaType.TEXT_PLAIN)
+                                        // jwt decoder doesn't check for token expiration
                                         .header("Authorization", "Bearer " + EXPIRED_TOKEN))
                         .andExpect(status().is2xxSuccessful())
                         .andReturn()
@@ -34,6 +36,24 @@ class JWTNoExpirationTest extends JWTTestBase {
     void testHelloNoToken() throws Exception {
         final MockHttpServletResponse response =
                 mockMvc.perform(get(BASE_URL).accept(MediaType.TEXT_PLAIN))
+                        .andExpect(status().is(401))
+                        .andReturn()
+                        .getResponse();
+        assertNotNull(response.getHeader("www-authenticate"));
+        assertTrue(response.getHeader("www-authenticate").contains("Bearer"));
+    }
+
+    @Test
+    void testHelloInvalidToken() throws Exception {
+        final MockHttpServletResponse response =
+                mockMvc.perform(
+                                get(BASE_URL)
+                                        .accept(MediaType.TEXT_PLAIN)
+                                        .header(
+                                                "Authorization",
+                                                "Bearer "
+                                                        + createMaliciousToken(
+                                                                Instant.now().plusSeconds(60))))
                         .andExpect(status().is(401))
                         .andReturn()
                         .getResponse();
