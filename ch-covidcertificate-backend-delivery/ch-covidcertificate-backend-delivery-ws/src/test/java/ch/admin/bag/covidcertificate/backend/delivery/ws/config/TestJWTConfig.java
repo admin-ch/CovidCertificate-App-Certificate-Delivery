@@ -12,7 +12,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 
 @Configuration
@@ -22,18 +24,24 @@ public class TestJWTConfig extends WebSecurityConfigurerAdapter {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value(
-            "${ws.jwt.openid-configuration-url:https://identity-r.bit.admin.ch/realms/BAG-CovidCertificate/.well-known/openid-configuration}")
+    @Value("${ws.jwt.openid-configuration-url}")
     private String url;
 
     @Value("${ws.jwt.jwks-json-key:jwks_uri}")
     private String jwksUriJsonKey;
+
     @Value("${ws.jwt.verification.resource-access-path:resource_access}")
     private String resourceAccessPath;
+
     @Value("${ws.jwt.verification.certificate-creator-role:certificatecreator}")
     private String certificateCreatorRole;
+
     @Value("${ws.jwt.verification.role-path:/ch-covidcertificate-backend-delivery-ws/roles}")
     private String rolePath;
+
+    @Value("${ws.jwt.defaultValidator:false}")
+    private Boolean useDefaultValidator;
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.sessionManagement()
@@ -64,7 +72,13 @@ public class TestJWTConfig extends WebSecurityConfigurerAdapter {
         var jsonurl = new URL(url);
         final String jswUrl = objectMapper.readTree(jsonurl).get("jwks_uri").asText();
         final var nimbusJwtDecoder = NimbusJwtDecoder.withJwkSetUri(jswUrl).build();
-        nimbusJwtDecoder.setJwtValidator(jwtValidator());
+        if (useDefaultValidator) {
+            nimbusJwtDecoder.setJwtValidator(
+                new DelegatingOAuth2TokenValidator<>(
+                    JwtValidators.createDefault(), jwtValidator()));
+        } else {
+            nimbusJwtDecoder.setJwtValidator(jwtValidator());
+        }
         return nimbusJwtDecoder;
     }
 }
