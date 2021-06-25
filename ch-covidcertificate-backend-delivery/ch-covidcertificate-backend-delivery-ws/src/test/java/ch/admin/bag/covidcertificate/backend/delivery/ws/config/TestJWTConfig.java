@@ -23,9 +23,17 @@ public class TestJWTConfig extends WebSecurityConfigurerAdapter {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value(
-            "${ws.jws.url:https://identity-r.bit.admin.ch/realms/BAG-CovidCertificate/.well-known/openid-configuration}")
+            "${ws.jwt.openid-configuration-url:https://identity-r.bit.admin.ch/realms/BAG-CovidCertificate/.well-known/openid-configuration}")
     private String url;
 
+    @Value("${ws.jwt.jwks-json-key:jwks_uri}")
+    private String jwksUriJsonKey;
+    @Value("${ws.jwt.verification.resource-access-path:resource_access}")
+    private String resourceAccessPath;
+    @Value("${ws.jwt.verification.certificate-creator-role:certificatecreator}")
+    private String certificateCreatorRole;
+    @Value("${ws.jwt.verification.role-path:/ch-covidcertificate-backend-delivery-ws/roles}")
+    private String rolePath;
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.sessionManagement()
@@ -48,7 +56,7 @@ public class TestJWTConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     public DeliveryJWTValidator jwtValidator() {
-        return new DeliveryJWTValidator();
+        return new DeliveryJWTValidator(resourceAccessPath, rolePath, certificateCreatorRole);
     }
 
     @Bean

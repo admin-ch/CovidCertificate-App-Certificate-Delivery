@@ -40,6 +40,12 @@ public class JwtConfig extends WebSecurityConfigurerAdapter {
 
     @Value("${ws.jwt.jwks-json-key:jwks_uri}")
     private String jwksUriJsonKey;
+    @Value("${ws.jwt.verification.resource-access-path:resource_access}")
+    private String resourceAccessPath;
+    @Value("${ws.jwt.verification.certificate-creator-role:certificatecreator}")
+    private String certificateCreatorRole;
+    @Value("${ws.jwt.verification.role-path:/ch-covidcertificate-backend-delivery-ws/roles}")
+    private String rolePath;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -63,7 +69,7 @@ public class JwtConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     public DeliveryJWTValidator jwtValidator() {
-        return new DeliveryJWTValidator();
+        return new DeliveryJWTValidator(resourceAccessPath, rolePath, certificateCreatorRole);
     }
 
     @Bean

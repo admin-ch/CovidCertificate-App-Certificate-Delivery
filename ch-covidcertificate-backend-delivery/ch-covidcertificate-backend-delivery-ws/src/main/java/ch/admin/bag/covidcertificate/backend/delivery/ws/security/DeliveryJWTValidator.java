@@ -11,27 +11,36 @@ import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 public class DeliveryJWTValidator implements OAuth2TokenValidator<Jwt> {
-
+    private final String certificateCreatorRole;
+    private final String resourceAccessPath;
+    private final String rolePath;
     ObjectMapper objectMapper = new ObjectMapper();
+
+    public DeliveryJWTValidator(String resourceAccessPath, String rolePath, String role) {
+        this.resourceAccessPath = resourceAccessPath;
+        this.rolePath = rolePath;
+        this.certificateCreatorRole = role;
+    }
+
 
     @Override
     public OAuth2TokenValidatorResult validate(Jwt token) {
 
-        final var containsClaim = token.containsClaim("resource_access");
+        final var containsClaim = token.containsClaim(resourceAccessPath);
         if (Boolean.TRUE.equals(containsClaim)) {
-            final var claimMap = token.getClaimAsString("resource_access");
+            final var claimMap = token.getClaimAsString(resourceAccessPath);
             try {
                 final var roles =
                         objectMapper
                                 .readTree(claimMap)
-                                .at("/ch-covidcertificate-backend-delivery-ws/roles");
+                                .at(rolePath);
                 if (!roles.isArray()) {
                     return OAuth2TokenValidatorResult.failure(
                             new OAuth2Error(OAuth2ErrorCodes.INVALID_TOKEN));
                 }
                 final var arrayNode = (ArrayNode) roles;
                 for (JsonNode element : arrayNode) {
-                    if ("certificatecreator".equals(element.textValue())) {
+                    if (certificateCreatorRole.equals(element.textValue())) {
                         return OAuth2TokenValidatorResult.success();
                     }
                 }
