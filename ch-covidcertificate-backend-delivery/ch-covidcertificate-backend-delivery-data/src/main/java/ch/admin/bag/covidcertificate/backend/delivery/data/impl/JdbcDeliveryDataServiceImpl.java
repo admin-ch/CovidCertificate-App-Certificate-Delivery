@@ -12,6 +12,7 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -24,6 +25,7 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.transaction.annotation.Transactional;
 
 public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
+
     private final NamedParameterJdbcTemplate jt;
     private final SimpleJdbcInsert transferInsert;
     private final SimpleJdbcInsert pushRegistrationInsert;
@@ -187,6 +189,15 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
     @Transactional(readOnly = false)
     public void insertCovidCert(DbCovidCert covidCert) {
         covidCertInsert.execute(createCovidCertParams(covidCert));
+    }
+
+    @Override
+    @Transactional(readOnly = false)
+    public void cleanDB(Duration retentionPeriod) {
+        var sql = "delete from t_transfer where created_at < :retention_time";
+        var retentionTime = Instant.now().minus(retentionPeriod);
+        var params = new MapSqlParameterSource("retention_time", Date.from(retentionTime));
+        jt.update(sql, params);
     }
 
     private MapSqlParameterSource createPushRegistrationParams(PushRegistration registration) {
