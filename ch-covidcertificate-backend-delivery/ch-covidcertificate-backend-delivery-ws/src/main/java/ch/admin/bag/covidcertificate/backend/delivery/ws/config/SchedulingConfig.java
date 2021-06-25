@@ -45,7 +45,7 @@ public class SchedulingConfig {
             logger.info(
                     "Removing transfer codes and related covid certs older than {} days",
                     retentionPeriod);
-            deliveryDataService.cleanDB(Duration.ofDays(retentionPeriod));
+            deliveryDataService.cleanDB(retentionPeriod);
         } catch (Exception e) {
             logger.error("Exception removing old transfer codes and covid certs", e);
         }
