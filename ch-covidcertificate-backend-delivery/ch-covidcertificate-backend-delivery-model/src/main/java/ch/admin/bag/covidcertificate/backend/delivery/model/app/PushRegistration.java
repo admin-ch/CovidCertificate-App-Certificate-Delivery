@@ -1,10 +1,13 @@
 package ch.admin.bag.covidcertificate.backend.delivery.model.app;
 
+import ch.ubique.openapi.docannotations.Documentation;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.validation.constraints.NotNull;
 
 public class PushRegistration {
+    @Documentation(description = "if null or blank it is a deregistration payload")
     private String pushToken;
+
     @NotNull private PushType pushType;
     @NotNull private String registerId;
     @JsonIgnore private int id;

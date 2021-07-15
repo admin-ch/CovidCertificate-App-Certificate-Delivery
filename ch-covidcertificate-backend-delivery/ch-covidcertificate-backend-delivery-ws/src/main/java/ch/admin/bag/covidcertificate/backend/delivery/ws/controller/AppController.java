@@ -168,8 +168,8 @@ public class AppController {
     }
 
     @Documentation(
-            description = "push registration endpoint",
-            responses = {"200 => registration for push successful"})
+            description = "push de/registration endpoint. (if no pushToken is sent, it is a deregistration)",
+            responses = {"200 => de/registration for push successful"})
     @CrossOrigin(origins = {"https://editor.swagger.io"})
     @PostMapping(value = "/push/register")
     public ResponseEntity<Void> registerForPush(@Valid @RequestBody PushRegistration registration) {
