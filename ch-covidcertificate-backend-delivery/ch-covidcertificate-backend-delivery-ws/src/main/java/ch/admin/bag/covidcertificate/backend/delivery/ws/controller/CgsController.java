@@ -74,7 +74,7 @@ public class CgsController {
             responses = {
                 "200 => delivery successful",
                 "403 => invalid jwt",
-                "404 => code not found"
+                "418 => code not found"
             })
     @CrossOrigin(origins = {"https://editor.swagger.io"})
     @PostMapping(value = "/covidcert")
@@ -123,8 +123,8 @@ public class CgsController {
     }
 
     @ExceptionHandler({CodeNotFoundException.class})
-    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseStatus(HttpStatus.I_AM_A_TEAPOT)
     public ResponseEntity<String> codeNotFound() {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("code not found");
+        return ResponseEntity.status(HttpStatus.I_AM_A_TEAPOT).body("code not found");
     }
 }

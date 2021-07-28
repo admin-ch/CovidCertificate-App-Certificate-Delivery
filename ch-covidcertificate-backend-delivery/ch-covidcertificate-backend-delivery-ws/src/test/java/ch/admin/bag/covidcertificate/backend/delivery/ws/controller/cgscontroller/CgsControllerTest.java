@@ -73,7 +73,7 @@ public abstract class CgsControllerTest extends BaseControllerTest {
                                 .content(asJsonString(getCgsCovidCert(UNREGISTERED_CODE)))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .accept(acceptMediaType))
-                .andExpect(status().is(HttpStatus.NOT_FOUND.value()));
+                .andExpect(status().is(HttpStatus.I_AM_A_TEAPOT.value()));
     }
 
     private CgsCovidCert getCgsCovidCert(String code) {
