@@ -34,9 +34,9 @@ import org.slf4j.LoggerFactory;
  *
  * @author meinen
  */
-public class IOSHeartbeatSilentPush {
+public class IosHeartbeatSilentPushImpl implements IosHeartbeatSilentPush {
 
-    private static final Logger logger = LoggerFactory.getLogger(IOSHeartbeatSilentPush.class);
+    private static final Logger logger = LoggerFactory.getLogger(IosHeartbeatSilentPushImpl.class);
 
     private final DeliveryDataService pushRegistrationDataService;
     private final String topic;
@@ -46,7 +46,7 @@ public class IOSHeartbeatSilentPush {
     private ApnsClient apnsClient;
     private ApnsClient apnsClientSandbox;
 
-    public IOSHeartbeatSilentPush(
+    public IosHeartbeatSilentPushImpl(
             final DeliveryDataService pushRegistrationDataService,
             byte[] signingKey,
             String teamId,

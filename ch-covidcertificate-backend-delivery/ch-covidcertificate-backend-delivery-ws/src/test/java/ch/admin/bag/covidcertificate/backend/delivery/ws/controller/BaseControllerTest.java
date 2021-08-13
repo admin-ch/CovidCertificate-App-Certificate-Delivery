@@ -39,6 +39,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.TestPropertySources;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.support.TestPropertySourceUtils;
 import org.springframework.test.web.servlet.MockMvc;
@@ -47,9 +48,12 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 @ExtendWith(SpringExtension.class)
-@ActiveProfiles({"test", "local"})
+@ActiveProfiles({"test"})
 @AutoConfigureMockMvc
-@TestPropertySource("classpath:application-test.properties")
+@TestPropertySources({
+    @TestPropertySource("classpath:application-test.properties"),
+    @TestPropertySource("classpath:application-local.properties")
+})
 @ContextConfiguration(initializers = BaseControllerTest.DockerPostgresDataSourceInitializer.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers

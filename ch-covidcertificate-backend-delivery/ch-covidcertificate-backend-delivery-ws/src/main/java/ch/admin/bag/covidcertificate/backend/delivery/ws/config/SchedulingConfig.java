@@ -1,7 +1,7 @@
 package ch.admin.bag.covidcertificate.backend.delivery.ws.config;
 
 import ch.admin.bag.covidcertificate.backend.delivery.data.DeliveryDataService;
-import ch.admin.bag.covidcertificate.backend.delivery.ws.service.IOSHeartbeatSilentPush;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.service.IosHeartbeatSilentPush;
 import java.time.Duration;
 import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
@@ -18,14 +18,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 public class SchedulingConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(SchedulingConfig.class);
-    private final IOSHeartbeatSilentPush iosHeartbeatSilentPush;
+    private final IosHeartbeatSilentPush iosHeartbeatSilentPush;
     private final DeliveryDataService deliveryDataService;
 
     @Value("${db.retentionPeriod:P10D}")
     private Duration retentionPeriod;
 
     public SchedulingConfig(
-            IOSHeartbeatSilentPush iosHeartbeatSilentPush,
+            IosHeartbeatSilentPush iosHeartbeatSilentPush,
             DeliveryDataService deliveryDataService) {
         this.iosHeartbeatSilentPush = iosHeartbeatSilentPush;
         this.deliveryDataService = deliveryDataService;
