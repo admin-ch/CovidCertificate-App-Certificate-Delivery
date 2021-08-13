@@ -87,7 +87,7 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
                     new MapSqlParameterSource("code", code),
                     Integer.class);
         } catch (EmptyResultDataAccessException e) {
-            throw new CodeNotFoundException();
+            throw new CodeNotFoundException(code);
         }
     }
 
@@ -100,7 +100,7 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
                     new MapSqlParameterSource("code", code),
                     new TransferRowMapper());
         } catch (EmptyResultDataAccessException e) {
-            throw new CodeNotFoundException();
+            throw new CodeNotFoundException(code);
         }
     }
 
@@ -125,7 +125,7 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
                     "delete from t_transfer where code = :code",
                     new MapSqlParameterSource("code", code));
         } else {
-            throw new CodeNotFoundException();
+            throw new CodeNotFoundException(code);
         }
     }
 

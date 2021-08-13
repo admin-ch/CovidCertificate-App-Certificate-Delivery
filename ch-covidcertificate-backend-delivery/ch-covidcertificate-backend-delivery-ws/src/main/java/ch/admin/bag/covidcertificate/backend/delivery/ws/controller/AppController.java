@@ -91,14 +91,17 @@ public class AppController {
             @Valid @RequestBody DeliveryRegistration registration)
             throws CodeAlreadyExistsException, InvalidSignatureException, InvalidActionException,
                     InvalidSignaturePayloadException, InvalidPublicKeyException {
+        String code = registration.getCode();
+        logger.info("registration for transfer code {} requested", code);
         validateSignature(
                 registration.getPublicKey(),
                 registration.getAlgorithm(),
                 registration.getSignaturePayload(),
                 registration.getSignature());
         signaturePayloadValidator.validate(
-                registration.getSignaturePayload(), Action.REGISTER, registration.getCode());
+                registration.getSignaturePayload(), Action.REGISTER, code);
         deliveryDataService.initTransfer(registration);
+        logger.info("registration for transfer code {} successful", code);
         return ResponseEntity.ok().build();
     }
 
@@ -115,10 +118,13 @@ public class AppController {
             @Valid @RequestBody RequestDeliveryPayload payload)
             throws CodeNotFoundException, InvalidSignatureException, InvalidActionException,
                     InvalidSignaturePayloadException, InvalidPublicKeyException {
-        validateSignature(payload.getCode(), payload.getSignaturePayload(), payload.getSignature());
-        signaturePayloadValidator.validate(
-                payload.getSignaturePayload(), Action.GET, payload.getCode());
-        List<CovidCert> covidCerts = deliveryDataService.findCovidCerts(payload.getCode());
+        String code = payload.getCode();
+        validateSignature(code, payload.getSignaturePayload(), payload.getSignature());
+        signaturePayloadValidator.validate(payload.getSignaturePayload(), Action.GET, code);
+        List<CovidCert> covidCerts = deliveryDataService.findCovidCerts(code);
+        if (!covidCerts.isEmpty()) {
+            logger.info("delivering {} covid certs for transfer code {}", covidCerts.size(), code);
+        }
         return ResponseEntity.ok(new CovidCertDelivery(covidCerts));
     }
 
@@ -135,10 +141,11 @@ public class AppController {
             @Valid @RequestBody RequestDeliveryPayload payload)
             throws InvalidPublicKeyException, InvalidSignatureException, CodeNotFoundException,
                     InvalidActionException, InvalidSignaturePayloadException {
-        validateSignature(payload.getCode(), payload.getSignaturePayload(), payload.getSignature());
-        signaturePayloadValidator.validate(
-                payload.getSignaturePayload(), Action.DELETE, payload.getCode());
-        deliveryDataService.closeTransfer(payload.getCode());
+        String code = payload.getCode();
+        validateSignature(code, payload.getSignaturePayload(), payload.getSignature());
+        signaturePayloadValidator.validate(payload.getSignaturePayload(), Action.DELETE, code);
+        deliveryDataService.closeTransfer(code);
+        logger.info("transfer complete. removed transfer code {}", code);
         return ResponseEntity.ok().build();
     }
 
@@ -168,7 +175,8 @@ public class AppController {
     }
 
     @Documentation(
-            description = "push de/registration endpoint. (if no pushToken is sent, it is a deregistration)",
+            description =
+                    "push de/registration endpoint. (if no pushToken is sent, it is a deregistration)",
             responses = {"200 => de/registration for push successful"})
     @CrossOrigin(origins = {"https://editor.swagger.io"})
     @PostMapping(value = "/push/register")
