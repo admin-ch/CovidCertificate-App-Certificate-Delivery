@@ -27,7 +27,9 @@ import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.Inva
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidPublicKeyException;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidSignatureException;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidSignaturePayloadException;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.utils.HashUtil;
 import ch.ubique.openapi.docannotations.Documentation;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -90,7 +92,8 @@ public class AppController {
     public ResponseEntity<Void> registerForDelivery(
             @Valid @RequestBody DeliveryRegistration registration)
             throws CodeAlreadyExistsException, InvalidSignatureException, InvalidActionException,
-                    InvalidSignaturePayloadException, InvalidPublicKeyException {
+                    InvalidSignaturePayloadException, InvalidPublicKeyException,
+                    NoSuchAlgorithmException {
         String code = registration.getCode();
         logger.info("registration for transfer code {} requested", code);
         validateSignature(
@@ -101,7 +104,10 @@ public class AppController {
         signaturePayloadValidator.validate(
                 registration.getSignaturePayload(), Action.REGISTER, code);
         deliveryDataService.initTransfer(registration);
-        logger.info("registration for transfer code {} successful", code);
+        logger.info(
+                "registration for transfer code {} successful. publicKey sha256 hash: {}",
+                code,
+                HashUtil.getSha256Hash(registration.getPublicKey()));
         return ResponseEntity.ok().build();
     }
 
