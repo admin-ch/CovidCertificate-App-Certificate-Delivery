@@ -83,7 +83,10 @@ public class CgsController {
                     InvalidAlgorithmParameterException, NoSuchPaddingException,
                     IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException,
                     InvalidKeySpecException, InvalidParameterSpecException, InvalidKeyException {
+        String code = covidCert.getCode();
+        logger.info("received covid cert for transfer code {}", code);
         deliveryDataService.insertCovidCert(mapAndEncrypt(covidCert));
+        logger.info("encrypted and inserted covid cert for transfer code {}", code);
         return ResponseEntity.ok().build();
     }
 
@@ -124,7 +127,8 @@ public class CgsController {
 
     @ExceptionHandler({CodeNotFoundException.class})
     @ResponseStatus(HttpStatus.I_AM_A_TEAPOT)
-    public ResponseEntity<String> codeNotFound() {
+    public ResponseEntity<String> codeNotFound(CodeNotFoundException e) {
+        logger.info("cgs sent non-existent transfer code {}", e.getCode());
         return ResponseEntity.status(HttpStatus.I_AM_A_TEAPOT).body("code not found");
     }
 }

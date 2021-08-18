@@ -34,9 +34,9 @@ import org.slf4j.LoggerFactory;
  *
  * @author meinen
  */
-public class IOSHeartbeatSilentPush {
+public class IosHeartbeatSilentPushImpl implements IosHeartbeatSilentPush {
 
-    private static final Logger logger = LoggerFactory.getLogger(IOSHeartbeatSilentPush.class);
+    private static final Logger logger = LoggerFactory.getLogger(IosHeartbeatSilentPushImpl.class);
 
     private final DeliveryDataService pushRegistrationDataService;
     private final String topic;
@@ -46,7 +46,7 @@ public class IOSHeartbeatSilentPush {
     private ApnsClient apnsClient;
     private ApnsClient apnsClientSandbox;
 
-    public IOSHeartbeatSilentPush(
+    public IosHeartbeatSilentPushImpl(
             final DeliveryDataService pushRegistrationDataService,
             byte[] signingKey,
             String teamId,
@@ -166,8 +166,12 @@ public class IOSHeartbeatSilentPush {
                     // collect bad/unregistered device tokens and remove from database
                     tokensToRemove.add(r.getPushNotification().getToken());
                 }
-            } catch (InterruptedException | ExecutionException e) {
+            } catch (ExecutionException e) {
                 logger.info("Exception waiting for response. Continue", e);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                logger.error("Current thread was interrrupted", ex);
+                break;
             }
         }
 

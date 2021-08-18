@@ -20,7 +20,7 @@ import ch.admin.bag.covidcertificate.backend.delivery.ws.security.encryption.Cry
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.encryption.EcCrypto;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.encryption.RsaCrypto;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.signature.JwsMessageConverter;
-import ch.admin.bag.covidcertificate.backend.delivery.ws.service.IOSHeartbeatSilentPush;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.service.IosHeartbeatSilentPush;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.KeyStore;
@@ -55,17 +55,7 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
 
     @Value("${ws.jws.password:}")
     public String p12KeyStorePassword;
-    // base64 encoded p8 file
-    @Value("${push.ios.signingkey}")
-    protected String iosPushSigningKey;
-    @Value("${push.ios.teamid}")
-    protected String iosPushTeamId;
-    @Value("${push.ios.keyid}")
-    protected String iosPushKeyId;
-    @Value("${push.ios.topic}")
-    protected String iosPushTopic;
-    @Value("${push.batchsize:100000}")
-    protected int batchSize;
+
     @Value(
             "#{${ws.security.headers: {'X-Content-Type-Options':'nosniff', 'X-Frame-Options':'DENY','X-Xss-Protection':'1; mode=block'}}}")
     Map<String, String> additionalHeaders;
@@ -74,7 +64,7 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
 
     public abstract Flyway flyway();
 
-    public abstract IOSHeartbeatSilentPush iosHeartbeatSilentPush(
+    public abstract IosHeartbeatSilentPush iosHeartbeatSilentPush(
             DeliveryDataService pushRegistrationDataService);
 
     @Override
@@ -126,8 +116,9 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
     }
 
     @Bean
-    public DeliveryDataService deliveryDataService(DataSource dataSource) {
-        return new JdbcDeliveryDataServiceImpl(dataSource, batchSize);
+    public DeliveryDataService deliveryDataService(
+            DataSource dataSource, @Value("${push.batchsize:100000}") int pushBatchSize) {
+        return new JdbcDeliveryDataServiceImpl(dataSource, pushBatchSize);
     }
 
     @Bean

@@ -11,7 +11,7 @@
 package ch.admin.bag.covidcertificate.backend.delivery.ws.config;
 
 import ch.admin.bag.covidcertificate.backend.delivery.data.DeliveryDataService;
-import ch.admin.bag.covidcertificate.backend.delivery.ws.service.IOSHeartbeatSilentPush;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.service.IosHeartbeatSilentPush;
 import javax.sql.DataSource;
 import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
@@ -47,7 +47,7 @@ public class TestConfig extends WsBaseConfig {
     }
 
     @Override
-    public IOSHeartbeatSilentPush iosHeartbeatSilentPush(
+    public IosHeartbeatSilentPush iosHeartbeatSilentPush(
             DeliveryDataService pushRegistrationDataService) {
         return null;
     }
