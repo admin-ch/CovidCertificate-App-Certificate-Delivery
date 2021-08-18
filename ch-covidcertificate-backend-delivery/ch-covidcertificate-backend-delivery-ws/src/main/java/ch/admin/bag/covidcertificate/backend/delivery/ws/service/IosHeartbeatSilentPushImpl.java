@@ -166,8 +166,12 @@ public class IosHeartbeatSilentPushImpl implements IosHeartbeatSilentPush {
                     // collect bad/unregistered device tokens and remove from database
                     tokensToRemove.add(r.getPushNotification().getToken());
                 }
-            } catch (InterruptedException | ExecutionException e) {
+            } catch (ExecutionException e) {
                 logger.info("Exception waiting for response. Continue", e);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                logger.error("Current thread was interrrupted", ex);
+                break;
             }
         }
 
