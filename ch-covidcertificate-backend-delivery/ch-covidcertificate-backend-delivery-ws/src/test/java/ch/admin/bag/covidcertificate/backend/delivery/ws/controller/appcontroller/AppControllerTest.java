@@ -416,4 +416,15 @@ public abstract class AppControllerTest extends BaseControllerTest {
                 .andExpect(status().isOk());
         assertTrue(deliveryDataService.getPushRegistrationByType(PushType.AND, 0).isEmpty());
     }
+
+    @Test
+    public void registrationCodeSanitizationTest() throws Exception {
+        final String unsanitizedCode = "abc123456\n";
+        final String sanitizedCode = "ABC123456";
+
+        DeliveryRegistration registration =
+                getDeliveryRegistration(
+                        Action.REGISTER, unsanitizedCode, Instant.now(), this.algorithm);
+        assertEquals(sanitizedCode, registration.getCode());
+    }
 }

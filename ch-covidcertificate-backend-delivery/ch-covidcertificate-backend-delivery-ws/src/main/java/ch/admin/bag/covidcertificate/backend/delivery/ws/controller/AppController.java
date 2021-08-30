@@ -94,7 +94,7 @@ public class AppController {
             throws CodeAlreadyExistsException, InvalidSignatureException, InvalidActionException,
                     InvalidSignaturePayloadException, InvalidPublicKeyException,
                     NoSuchAlgorithmException {
-        String code = registration.getCode().replaceAll("[\n\r\t]", "_");
+        String code = registration.getCode();
         logger.info("registration for transfer code {} requested", code);
         validateSignature(
                 registration.getPublicKey(),

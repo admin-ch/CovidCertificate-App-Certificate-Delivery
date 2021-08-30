@@ -1,5 +1,6 @@
 package ch.admin.bag.covidcertificate.backend.delivery.ws.security;
 
+import ch.admin.bag.covidcertificate.backend.delivery.model.util.CodeHelper;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidActionException;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidSignaturePayloadException;
 import java.time.Instant;
@@ -19,7 +20,7 @@ public class SignaturePayloadValidator {
             throw new InvalidSignaturePayloadException();
         }
 
-        if (!code.equals(signaturePayloadSplit[1])) {
+        if (!code.equals(CodeHelper.getSanitizedCode(signaturePayloadSplit[1]))) {
             throw new InvalidSignaturePayloadException();
         }
 

@@ -67,6 +67,31 @@ public abstract class CgsControllerTest extends BaseControllerTest {
     }
 
     @Test
+    public void testUploadSanitizedCode() throws Exception {
+        final String code = "abc123def\n";
+        final String sanitizedCode = "ABC123DEF";
+
+        // verify no covid cert uploaded
+        assertThrows(
+                CodeNotFoundException.class,
+                () -> deliveryDataService.findCovidCerts(sanitizedCode));
+
+        // register client for covidcert delivery
+        registerForDelivery(
+                getDeliveryRegistration(Action.REGISTER, code, Instant.now(), this.algorithm));
+
+        mockMvc.perform(
+                        post(COVID_CERT_UPLOAD_ENDPOINT)
+                                .content(asJsonString(getCgsCovidCert(code)))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .accept(acceptMediaType))
+                .andExpect(status().is2xxSuccessful());
+
+        // verify covid cert uploaded
+        assertEquals(1, deliveryDataService.findCovidCerts(sanitizedCode).size());
+    }
+
+    @Test
     public void testCodeNotFound() throws Exception {
         mockMvc.perform(
                         post(COVID_CERT_UPLOAD_ENDPOINT)
