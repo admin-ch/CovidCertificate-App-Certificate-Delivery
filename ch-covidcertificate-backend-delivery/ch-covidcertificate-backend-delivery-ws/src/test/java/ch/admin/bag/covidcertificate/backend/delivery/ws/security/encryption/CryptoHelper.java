@@ -16,8 +16,12 @@ public class CryptoHelper {
     }
 
     public static KeyPair createRsaKeyPair() throws NoSuchAlgorithmException {
+        return createRsaKeyPair(2048);
+    }
+
+    public static KeyPair createRsaKeyPair(int keyLength) throws NoSuchAlgorithmException {
         var kpg = KeyPairGenerator.getInstance("RSA");
-        kpg.initialize(2048);
+        kpg.initialize(keyLength);
         return kpg.generateKeyPair();
     }
 
