@@ -28,8 +28,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
@@ -45,6 +45,8 @@ public abstract class AppControllerTest extends BaseControllerTest {
     private static final String GET_COVID_CERT_ENDPOINT = BASE_URL + "/covidcert";
     private static final String COMPLETE_ENDPOINT = BASE_URL + "/covidcert/complete";
     private static final String PUSH_REGISTER_ENDPOINT = BASE_URL + "/push/register"; // TODO
+
+    private static final Duration halfTimestampValidityWindow = Duration.ofHours(1);
 
     @BeforeAll
     public void setup() throws NoSuchAlgorithmException, SQLException {
@@ -210,10 +212,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
         // bad complete transfer request
         completeTransfer(
                 getRequestDeliveryPayload(
-                        Action.DELETE,
-                        code,
-                        Instant.now().minus(6, ChronoUnit.MINUTES),
-                        this.algorithm));
+                        Action.DELETE, code, getInvalidTimestamp(), this.algorithm));
 
         // verify covid cert is still in db
         assertEquals(1, deliveryDataService.findCovidCerts(code).size());
@@ -266,23 +265,22 @@ public abstract class AppControllerTest extends BaseControllerTest {
     }
 
     @Test
-    public void forbiddenTest() throws Exception {
+    public void invalidSignatureOrSignaturePayloadTest() throws Exception {
         final String code = CodeGenerator.generateCode();
 
         // register
         registerForDelivery(
                 getDeliveryRegistration(Action.REGISTER, code, Instant.now(), this.algorithm));
 
-        // forbidden tests for get
-        internalForbiddenTest(code, Action.GET, GET_COVID_CERT_ENDPOINT, HttpStatus.FORBIDDEN);
+        // tests for get
+        internalInvalidSignatureOrSignaturePayloadTest(code, Action.GET, GET_COVID_CERT_ENDPOINT);
 
-        // forbidden tests for delete (since best effort, it always returns OK)
-        internalForbiddenTest(code, Action.DELETE, COMPLETE_ENDPOINT, HttpStatus.FORBIDDEN);
+        // tests for delete
+        internalInvalidSignatureOrSignaturePayloadTest(code, Action.DELETE, COMPLETE_ENDPOINT);
     }
 
-    private void internalForbiddenTest(
-            String code, Action expectedAction, String endpoint, HttpStatus expectedStatusCode)
-            throws Exception {
+    private void internalInvalidSignatureOrSignaturePayloadTest(
+            String code, Action expectedAction, String endpoint) throws Exception {
         // invalid signature payload (action)
         for (Action action : Action.values()) {
             if (!expectedAction.equals(action)) {
@@ -297,7 +295,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
                                                                 this.algorithm)))
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .accept(acceptMediaType))
-                        .andExpect(status().is(expectedStatusCode.value()));
+                        .andExpect(status().is(HttpStatus.METHOD_NOT_ALLOWED.value()));
             }
         }
 
@@ -315,7 +313,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
                                 .content(asJsonString(payload))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .accept(acceptMediaType))
-                .andExpect(status().is(expectedStatusCode.value()));
+                .andExpect(status().is(HttpStatus.FORBIDDEN.value()));
 
         // invalid signature payload (timestamp)
         mockMvc.perform(
@@ -325,11 +323,11 @@ public abstract class AppControllerTest extends BaseControllerTest {
                                                 getRequestDeliveryPayload(
                                                         expectedAction,
                                                         code,
-                                                        Instant.now().minus(6, ChronoUnit.MINUTES),
+                                                        getInvalidTimestamp(),
                                                         this.algorithm)))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .accept(acceptMediaType))
-                .andExpect(status().is(expectedStatusCode.value()));
+                .andExpect(status().is(HttpStatus.TOO_EARLY.value()));
 
         // invalid signature (encrypted with wrong private key)
         mockMvc.perform(
@@ -339,11 +337,15 @@ public abstract class AppControllerTest extends BaseControllerTest {
                                                 getRequestDeliveryPayload(
                                                         expectedAction,
                                                         code,
-                                                        Instant.now().minus(6, ChronoUnit.MINUTES),
+                                                        Instant.now(),
                                                         getWrongAlgorithm())))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .accept(acceptMediaType))
-                .andExpect(status().is(expectedStatusCode.value()));
+                .andExpect(status().is(HttpStatus.FORBIDDEN.value()));
+    }
+
+    private Instant getInvalidTimestamp() {
+        return Instant.now().minus(halfTimestampValidityWindow.multipliedBy(3));
     }
 
     private Algorithm getWrongAlgorithm() {
