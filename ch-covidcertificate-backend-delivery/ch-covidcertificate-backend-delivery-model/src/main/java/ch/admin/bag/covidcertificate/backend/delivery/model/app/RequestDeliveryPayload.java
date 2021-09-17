@@ -1,5 +1,6 @@
 package ch.admin.bag.covidcertificate.backend.delivery.model.app;
 
+import ch.admin.bag.covidcertificate.backend.delivery.model.util.CodeHelper;
 import ch.ubique.openapi.docannotations.Documentation;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -29,7 +30,7 @@ public class RequestDeliveryPayload {
     }
 
     public void setCode(String code) {
-        this.code = code;
+        this.code = CodeHelper.getSanitizedCode(code);
     }
 
     public String getSignaturePayload() {

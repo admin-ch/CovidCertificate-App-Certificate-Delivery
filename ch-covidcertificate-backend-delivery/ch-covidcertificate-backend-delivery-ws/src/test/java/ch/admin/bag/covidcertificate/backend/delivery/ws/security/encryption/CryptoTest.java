@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import ch.admin.bag.covidcertificate.backend.delivery.data.util.CodeGenerator;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.Action;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidPublicKeyException;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidSignatureException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -90,6 +91,13 @@ public class CryptoTest {
 
         String pubKey = Base64.getEncoder().encodeToString(rsaKeyPair.getPublic().getEncoded());
         printPayloads(sig, CODE, pubKey, Algorithm.RSA2048);
+    }
+
+    @Test
+    public void shortRsaKey() throws Exception {
+        KeyPair rsaKeyPair = CryptoHelper.createRsaKeyPair(2000);
+        String pubKey = Base64.getEncoder().encodeToString(rsaKeyPair.getPublic().getEncoded());
+        assertThrows(InvalidPublicKeyException.class, () -> new RsaCrypto().getPublicKey(pubKey));
     }
 
     private void printPayloads(Signature sig, String code, String pubKey, Algorithm algorithm)

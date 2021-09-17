@@ -34,7 +34,7 @@ public abstract class Crypto {
             throws NoSuchPaddingException, NoSuchAlgorithmException,
                     InvalidAlgorithmParameterException, InvalidKeyException,
                     IllegalBlockSizeException, BadPaddingException, InvalidKeySpecException,
-                    InvalidParameterSpecException;
+                    InvalidParameterSpecException, InvalidPublicKeyException;
 
     /**
      * validates the signature and signature payload with the given public key
@@ -73,5 +73,6 @@ public abstract class Crypto {
     protected abstract Signature getSignature() throws NoSuchAlgorithmException;
 
     protected abstract PublicKey getPublicKey(String publicKey)
-            throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidParameterSpecException;
+            throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidParameterSpecException,
+                    InvalidPublicKeyException;
 }
