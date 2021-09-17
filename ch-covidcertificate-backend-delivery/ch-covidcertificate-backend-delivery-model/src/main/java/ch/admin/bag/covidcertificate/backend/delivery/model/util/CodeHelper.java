@@ -5,6 +5,6 @@ public class CodeHelper {
     private CodeHelper() {}
 
     public static String getSanitizedCode(String unsanitized) {
-        return (unsanitized != null) ? unsanitized.replaceAll("[\n\r\t]", "").toUpperCase() : null;
+        return (unsanitized != null) ? unsanitized.replaceAll("\\s", "").toUpperCase() : null;
     }
 }
