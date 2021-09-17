@@ -27,11 +27,11 @@ import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.Inva
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidPublicKeyException;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidSignatureException;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidSignaturePayloadException;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidTimestampException;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.utils.HashUtil;
 import ch.ubique.openapi.docannotations.Documentation;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,7 +93,7 @@ public class AppController {
             @Valid @RequestBody DeliveryRegistration registration)
             throws CodeAlreadyExistsException, InvalidSignatureException, InvalidActionException,
                     InvalidSignaturePayloadException, InvalidPublicKeyException,
-                    NoSuchAlgorithmException {
+                    NoSuchAlgorithmException, InvalidTimestampException {
         String code = registration.getCode();
         logger.info("registration for transfer code {} requested", code);
         validateSignature(
@@ -123,7 +123,8 @@ public class AppController {
     public ResponseEntity<CovidCertDelivery> getCovidCertDelivery(
             @Valid @RequestBody RequestDeliveryPayload payload)
             throws CodeNotFoundException, InvalidSignatureException, InvalidActionException,
-                    InvalidSignaturePayloadException, InvalidPublicKeyException {
+                    InvalidSignaturePayloadException, InvalidPublicKeyException,
+                    InvalidTimestampException {
         String code = payload.getCode();
         validateSignature(code, payload.getSignaturePayload(), payload.getSignature());
         signaturePayloadValidator.validate(payload.getSignaturePayload(), Action.GET, code);
@@ -146,7 +147,8 @@ public class AppController {
     public ResponseEntity<Void> covidCertDeliveryComplete(
             @Valid @RequestBody RequestDeliveryPayload payload)
             throws InvalidPublicKeyException, InvalidSignatureException, CodeNotFoundException,
-                    InvalidActionException, InvalidSignaturePayloadException {
+                    InvalidActionException, InvalidSignaturePayloadException,
+                    InvalidTimestampException {
         String code = payload.getCode();
         validateSignature(code, payload.getSignaturePayload(), payload.getSignature());
         signaturePayloadValidator.validate(payload.getSignaturePayload(), Action.DELETE, code);
@@ -191,18 +193,10 @@ public class AppController {
         return ResponseEntity.ok().build();
     }
 
-    private boolean isRegisterRequest(HttpServletRequest req) {
-        return req.getRequestURL().toString().endsWith("/app/delivery/v1/covidcert/register");
-    }
-
     @ExceptionHandler({CodeAlreadyExistsException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ResponseEntity<String> codeAlreadyExists(HttpServletRequest req) {
-        if (isRegisterRequest(req)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("code already in use");
-        } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("access denied");
-        }
+    public ResponseEntity<String> codeAlreadyExists() {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body("code already in use");
     }
 
     @ExceptionHandler({CodeNotFoundException.class})
@@ -217,23 +211,22 @@ public class AppController {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("invalid signature");
     }
 
+    @ExceptionHandler({InvalidTimestampException.class})
+    @ResponseStatus(HttpStatus.TOO_EARLY)
+    public ResponseEntity<String> invalidTimestamp(InvalidTimestampException e) {
+        logger.error("received invalid timestamp. {}", e.toString());
+        return ResponseEntity.status(HttpStatus.TOO_EARLY).body("I | TIME");
+    }
+
     @ExceptionHandler({InvalidPublicKeyException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<String> invalidPublicKey(HttpServletRequest req) {
-        if (isRegisterRequest(req)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("invalid public key");
-        } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("access denied");
-        }
+    public ResponseEntity<String> invalidPublicKey() {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("I | KEY");
     }
 
     @ExceptionHandler({InvalidActionException.class})
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
-    public ResponseEntity<String> invalidAction(HttpServletRequest req) {
-        if (isRegisterRequest(req)) {
-            return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body("invalid action");
-        } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("access denied");
-        }
+    public ResponseEntity<String> invalidAction() {
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body("invalid action");
     }
 }

@@ -28,6 +28,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -111,8 +112,10 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
     }
 
     @Bean
-    public SignaturePayloadValidator signatureValidator() {
-        return new SignaturePayloadValidator();
+    public SignaturePayloadValidator signatureValidator(
+            @Value("${ws.signature.validation.timestamp.halfWindowDuration:PT60M}")
+                    Duration halfWindow) {
+        return new SignaturePayloadValidator(halfWindow);
     }
 
     @Bean
