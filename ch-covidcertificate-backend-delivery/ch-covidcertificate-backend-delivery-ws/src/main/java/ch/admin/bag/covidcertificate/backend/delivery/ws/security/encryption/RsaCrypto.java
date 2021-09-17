@@ -1,5 +1,6 @@
 package ch.admin.bag.covidcertificate.backend.delivery.ws.security.encryption;
 
+import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidPublicKeyException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -23,6 +24,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 public class RsaCrypto extends Crypto {
 
     private final SecureRandom secureRandom;
+    private static final int MIN_KEY_LENGTH = 2048;
 
     public RsaCrypto() {
         this.secureRandom = new SecureRandom();
@@ -32,7 +34,8 @@ public class RsaCrypto extends Crypto {
     public String encrypt(String toEncrypt, String publicKey)
             throws NoSuchPaddingException, NoSuchAlgorithmException,
                     InvalidAlgorithmParameterException, InvalidKeyException,
-                    IllegalBlockSizeException, BadPaddingException, InvalidKeySpecException {
+                    IllegalBlockSizeException, BadPaddingException, InvalidKeySpecException,
+                    InvalidPublicKeyException {
         RSAPublicKey rsaPubKey = (RSAPublicKey) getPublicKey(publicKey);
 
         // generate random secret and random IV
@@ -75,11 +78,20 @@ public class RsaCrypto extends Crypto {
 
     @Override
     protected PublicKey getPublicKey(String publicKey)
-            throws NoSuchAlgorithmException, InvalidKeySpecException {
+            throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidPublicKeyException {
         byte[] decoded = Base64.getDecoder().decode(publicKey);
         X509EncodedKeySpec spec = new X509EncodedKeySpec(decoded);
         KeyFactory kf = KeyFactory.getInstance("RSA");
-        return kf.generatePublic(spec);
+        PublicKey pk = kf.generatePublic(spec);
+        validateKeyLength((RSAPublicKey) pk);
+        return pk;
+    }
+
+    private void validateKeyLength(RSAPublicKey pk) throws InvalidPublicKeyException {
+        int keyLength = pk.getModulus().bitLength();
+        if (keyLength < MIN_KEY_LENGTH) {
+            throw new InvalidPublicKeyException();
+        }
     }
 
     @Override

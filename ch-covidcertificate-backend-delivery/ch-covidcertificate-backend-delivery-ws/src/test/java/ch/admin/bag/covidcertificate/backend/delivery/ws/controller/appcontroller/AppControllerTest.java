@@ -22,8 +22,10 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.controller.BaseControllerTest;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.Action;
+import ch.admin.bag.covidcertificate.backend.delivery.ws.security.encryption.CryptoHelper;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.util.TestHelper;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.time.Instant;
@@ -144,6 +146,18 @@ public abstract class AppControllerTest extends BaseControllerTest {
 
         // invalid public key (algorithm, key mismatch)
         registration.setPublicKey(getPublicKey(getWrongAlgorithm()));
+        mockMvc.perform(
+                        post(INIT_ENDPOINT)
+                                .content(asJsonString(registration))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .accept(acceptMediaType))
+                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
+
+        // invalid rsa key (too short)
+        KeyPair shortRsaKeyPair = CryptoHelper.createRsaKeyPair(2000);
+        String shortRsaPubKey =
+                Base64.getEncoder().encodeToString(shortRsaKeyPair.getPublic().getEncoded());
+        registration.setPublicKey(shortRsaPubKey);
         mockMvc.perform(
                         post(INIT_ENDPOINT)
                                 .content(asJsonString(registration))
