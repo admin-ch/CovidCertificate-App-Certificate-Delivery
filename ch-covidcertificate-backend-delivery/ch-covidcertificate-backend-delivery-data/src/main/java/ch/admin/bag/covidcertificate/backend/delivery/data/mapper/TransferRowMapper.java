@@ -15,6 +15,7 @@ public class TransferRowMapper implements RowMapper<DbTransfer> {
         transfer.setCreatedAt(rs.getTimestamp("created_at").toInstant());
         transfer.setCode(rs.getString("code"));
         transfer.setPublicKey(rs.getString("public_key"));
+        transfer.setPublicKeySha256(rs.getString("public_key_sha_256"));
         transfer.setAlgorithm(Algorithm.valueOf(rs.getString("algorithm")));
         return transfer;
     }

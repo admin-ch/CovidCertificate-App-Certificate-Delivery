@@ -44,7 +44,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
     private static final String INIT_ENDPOINT = BASE_URL + "/covidcert/register";
     private static final String GET_COVID_CERT_ENDPOINT = BASE_URL + "/covidcert";
     private static final String COMPLETE_ENDPOINT = BASE_URL + "/covidcert/complete";
-    private static final String PUSH_REGISTER_ENDPOINT = BASE_URL + "/push/register"; // TODO
+    private static final String PUSH_REGISTER_ENDPOINT = BASE_URL + "/push/register";
 
     private static final Duration halfTimestampValidityWindow = Duration.ofHours(1);
 
@@ -68,6 +68,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
 
     @Test
     public void registrationCodeReleasedTest() throws Exception {
+        refreshKeys();
         final String code = CodeGenerator.generateCode();
 
         DeliveryRegistration registration =
@@ -93,6 +94,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
 
     @Test
     public void registrationInvalidActionTest() throws Exception {
+        refreshKeys();
         final String code = CodeGenerator.generateCode();
 
         // invalid action
@@ -112,6 +114,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
 
     @Test
     public void registrationInvalidSignatureTest() throws Exception {
+        refreshKeys();
         final String code = CodeGenerator.generateCode();
 
         DeliveryRegistration registration =
@@ -131,6 +134,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
 
     @Test
     public void registrationInvalidPublicKey() throws Exception {
+        refreshKeys();
         final String code = CodeGenerator.generateCode();
 
         // invalid public key
@@ -170,6 +174,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
 
     @Test
     public void deliveryFlowTest() throws Exception {
+        refreshKeys();
         final String code = CodeGenerator.generateCode();
 
         // register
@@ -231,6 +236,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
 
     @Test
     public void invalidCodeLengthTest() throws Exception {
+        refreshKeys();
         for (String invalidCode : List.of("TOOSHORT", "TOOLONG000")) {
             DeliveryRegistration registration =
                     getDeliveryRegistration(
@@ -266,6 +272,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
 
     @Test
     public void invalidSignatureOrSignaturePayloadTest() throws Exception {
+        refreshKeys();
         final String code = CodeGenerator.generateCode();
 
         // register

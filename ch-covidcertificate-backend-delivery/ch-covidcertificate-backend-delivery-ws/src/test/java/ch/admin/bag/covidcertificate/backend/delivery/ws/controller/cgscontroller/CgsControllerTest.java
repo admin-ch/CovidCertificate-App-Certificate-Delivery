@@ -46,6 +46,7 @@ public abstract class CgsControllerTest extends BaseControllerTest {
 
     @Test
     public void testUpload() throws Exception {
+        refreshKeys();
         final String code = CodeGenerator.generateCode();
 
         // verify no covid cert uploaded
@@ -68,6 +69,7 @@ public abstract class CgsControllerTest extends BaseControllerTest {
 
     @Test
     public void testUploadSanitizedCode() throws Exception {
+        refreshKeys();
         final String code = "abc123def\n";
         final String sanitizedCode = "ABC123DEF";
 

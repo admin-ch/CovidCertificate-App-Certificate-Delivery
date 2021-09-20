@@ -19,8 +19,10 @@ import ch.admin.bag.covidcertificate.backend.delivery.data.config.FlyWayConfig;
 import ch.admin.bag.covidcertificate.backend.delivery.data.config.PostgresDataConfig;
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeAlreadyExistsException;
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeNotFoundException;
+import ch.admin.bag.covidcertificate.backend.delivery.data.exception.PublicKeyAlreadyExistsException;
 import ch.admin.bag.covidcertificate.backend.delivery.data.util.CodeGenerator;
 import ch.admin.bag.covidcertificate.backend.delivery.data.util.PostgresDbCleaner;
+import ch.admin.bag.covidcertificate.backend.delivery.data.util.RandomGenerator;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistration;
@@ -50,7 +52,6 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 class DeliveryDataServiceTest {
 
     public static final String CODE = CodeGenerator.generateCode();
-    public static final String PUBLIC_KEY = "public_key";
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     @Autowired private DeliveryDataService deliveryDataService;
 
@@ -59,8 +60,9 @@ class DeliveryDataServiceTest {
 
     @Test
     void testInitTransfer() throws Exception {
+        final String publicKey = "public_key";
         // init transfer
-        DeliveryRegistration registration = getDeliveryRegistration(CODE);
+        DeliveryRegistration registration = getDeliveryRegistration(CODE, publicKey);
         deliveryDataService.initTransfer(registration);
 
         // attempt to init transfer with existing code
@@ -68,17 +70,29 @@ class DeliveryDataServiceTest {
                 CodeAlreadyExistsException.class,
                 () -> deliveryDataService.initTransfer(registration));
 
+        // test public key uniqueness
+        assertThrows(
+                PublicKeyAlreadyExistsException.class,
+                () ->
+                        deliveryDataService.initTransfer(
+                                getDeliveryRegistration(CodeGenerator.generateCode(), publicKey)));
+
         // init transfer with different code
-        DeliveryRegistration otherRegistration = getDeliveryRegistration("OTHER");
+        DeliveryRegistration otherRegistration =
+                getDeliveryRegistration("OTHER", "other_public_key");
         deliveryDataService.initTransfer(otherRegistration);
     }
 
-    private DeliveryRegistration getDeliveryRegistration(String code) {
+    private DeliveryRegistration getDeliveryRegistration(String code, String publicKey) {
         DeliveryRegistration registration = new DeliveryRegistration();
         registration.setCode(code);
-        registration.setPublicKey(PUBLIC_KEY);
+        registration.setPublicKey(publicKey);
         registration.setAlgorithm(Algorithm.EC256);
         return registration;
+    }
+
+    private DeliveryRegistration getDeliveryRegistration(String code) {
+        return getDeliveryRegistration(code, RandomGenerator.randomAlphaNumericString());
     }
 
     @Test
@@ -202,7 +216,7 @@ class DeliveryDataServiceTest {
     }
 
     @Test
-    void testCleanDB() throws CodeAlreadyExistsException, CodeNotFoundException {
+    void testCleanDB() throws Exception {
         // init transfer
         DeliveryRegistration registration = getDeliveryRegistration(CODE);
         deliveryDataService.initTransfer(registration);

@@ -2,19 +2,23 @@ package ch.admin.bag.covidcertificate.backend.delivery.data;
 
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeAlreadyExistsException;
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeNotFoundException;
+import ch.admin.bag.covidcertificate.backend.delivery.data.exception.PublicKeyAlreadyExistsException;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistration;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface DeliveryDataService {
-    public void initTransfer(DeliveryRegistration registration) throws CodeAlreadyExistsException;
+    public void initTransfer(DeliveryRegistration registration)
+            throws CodeAlreadyExistsException, PublicKeyAlreadyExistsException,
+                    NoSuchAlgorithmException;
 
     boolean transferCodeExists(String code);
 

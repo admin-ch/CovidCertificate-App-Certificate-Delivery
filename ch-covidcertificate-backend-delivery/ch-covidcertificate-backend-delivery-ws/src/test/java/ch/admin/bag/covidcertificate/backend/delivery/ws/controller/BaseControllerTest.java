@@ -203,4 +203,9 @@ public abstract class BaseControllerTest {
     protected String getRsaPubKey() {
         return Base64.getEncoder().encodeToString(rsaKeyPair.getPublic().getEncoded());
     }
+
+    protected void refreshKeys() throws NoSuchAlgorithmException {
+        this.ecKeyPair = CryptoHelper.createEcKeyPair();
+        this.rsaKeyPair = CryptoHelper.createRsaKeyPair();
+    }
 }

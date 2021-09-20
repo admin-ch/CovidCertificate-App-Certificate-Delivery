@@ -1,4 +1,4 @@
-package ch.admin.bag.covidcertificate.backend.delivery.ws.utils;
+package ch.admin.bag.covidcertificate.backend.delivery.data.impl;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
