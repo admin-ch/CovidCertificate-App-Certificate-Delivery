@@ -13,6 +13,7 @@ package ch.admin.bag.covidcertificate.backend.delivery.ws.controller;
 import ch.admin.bag.covidcertificate.backend.delivery.data.DeliveryDataService;
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeAlreadyExistsException;
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeNotFoundException;
+import ch.admin.bag.covidcertificate.backend.delivery.data.exception.PublicKeyAlreadyExistsException;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCertDelivery;
@@ -28,7 +29,7 @@ import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.Inva
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidSignatureException;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidSignaturePayloadException;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.exception.InvalidTimestampException;
-import ch.admin.bag.covidcertificate.backend.delivery.ws.utils.HashUtil;
+import ch.admin.bag.covidcertificate.backend.delivery.data.impl.HashUtil;
 import ch.ubique.openapi.docannotations.Documentation;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -93,7 +94,8 @@ public class AppController {
             @Valid @RequestBody DeliveryRegistration registration)
             throws CodeAlreadyExistsException, InvalidSignatureException, InvalidActionException,
                     InvalidSignaturePayloadException, InvalidPublicKeyException,
-                    NoSuchAlgorithmException, InvalidTimestampException {
+                    NoSuchAlgorithmException, InvalidTimestampException,
+                    PublicKeyAlreadyExistsException {
         String code = registration.getCode();
         logger.info("registration for transfer code {} requested", code);
         validateSignature(
@@ -193,10 +195,22 @@ public class AppController {
         return ResponseEntity.ok().build();
     }
 
-    @ExceptionHandler({CodeAlreadyExistsException.class})
+    @ExceptionHandler({CodeAlreadyExistsException.class, PublicKeyAlreadyExistsException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ResponseEntity<String> codeAlreadyExists() {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body("code already in use");
+    public ResponseEntity<String> codeOrPublicKeyAlreadyExists(Exception e)
+            throws NoSuchAlgorithmException {
+        String reason = null;
+        if (e instanceof CodeAlreadyExistsException) {
+            reason = "code already in use";
+        } else if (e instanceof PublicKeyAlreadyExistsException) {
+            reason = "public key already in use";
+            PublicKeyAlreadyExistsException pkaee = (PublicKeyAlreadyExistsException) e;
+            logger.warn(
+                    "received duplicate public key for transfer code {}. publicKey sha256 hash: {}",
+                    pkaee.getCode(),
+                    HashUtil.getSha256Hash(pkaee.getPublicKey()));
+        }
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(reason);
     }
 
     @ExceptionHandler({CodeNotFoundException.class})

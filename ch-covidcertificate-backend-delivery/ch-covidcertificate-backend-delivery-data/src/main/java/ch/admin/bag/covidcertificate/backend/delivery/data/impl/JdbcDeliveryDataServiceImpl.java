@@ -3,6 +3,7 @@ package ch.admin.bag.covidcertificate.backend.delivery.data.impl;
 import ch.admin.bag.covidcertificate.backend.delivery.data.DeliveryDataService;
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeAlreadyExistsException;
 import ch.admin.bag.covidcertificate.backend.delivery.data.exception.CodeNotFoundException;
+import ch.admin.bag.covidcertificate.backend.delivery.data.exception.PublicKeyAlreadyExistsException;
 import ch.admin.bag.covidcertificate.backend.delivery.data.mapper.CovidCertRowMapper;
 import ch.admin.bag.covidcertificate.backend.delivery.data.mapper.PushRegistrationRowMapper;
 import ch.admin.bag.covidcertificate.backend.delivery.data.mapper.TransferRowMapper;
@@ -12,6 +13,7 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
@@ -51,11 +53,16 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
 
     @Override
     @Transactional(readOnly = false)
-    public void initTransfer(DeliveryRegistration registration) throws CodeAlreadyExistsException {
-        if (!transferCodeExists(registration.getCode())) {
-            transferInsert.execute(createTransferParams(registration));
-        } else {
+    public void initTransfer(DeliveryRegistration registration)
+            throws CodeAlreadyExistsException, PublicKeyAlreadyExistsException,
+                    NoSuchAlgorithmException {
+        if (transferCodeExists(registration.getCode())) {
             throw new CodeAlreadyExistsException();
+        } else if (publicKeyExists(registration.getPublicKey())) {
+            throw new PublicKeyAlreadyExistsException(
+                    registration.getPublicKey(), registration.getCode());
+        } else {
+            transferInsert.execute(createTransferParams(registration));
         }
     }
 
@@ -65,6 +72,16 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
         return jt.queryForObject(
                 "select exists(" + "select * from t_transfer" + " where code = :code" + ")",
                 new MapSqlParameterSource("code", code),
+                Boolean.class);
+    }
+
+    private boolean publicKeyExists(String publicKey) throws NoSuchAlgorithmException {
+        return jt.queryForObject(
+                "select exists("
+                        + "select * from t_transfer"
+                        + " where public_key_sha_256 = :public_key_sha_256"
+                        + ")",
+                new MapSqlParameterSource("public_key_sha_256", HashUtil.getSha256Hash(publicKey)),
                 Boolean.class);
     }
 
@@ -208,10 +225,12 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
         return params;
     }
 
-    private MapSqlParameterSource createTransferParams(DeliveryRegistration registration) {
+    private MapSqlParameterSource createTransferParams(DeliveryRegistration registration)
+            throws NoSuchAlgorithmException {
         var params = new MapSqlParameterSource();
         params.addValue("code", registration.getCode());
         params.addValue("public_key", registration.getPublicKey());
+        params.addValue("public_key_sha_256", HashUtil.getSha256Hash(registration.getPublicKey()));
         params.addValue("algorithm", registration.getAlgorithm().name());
         return params;
     }

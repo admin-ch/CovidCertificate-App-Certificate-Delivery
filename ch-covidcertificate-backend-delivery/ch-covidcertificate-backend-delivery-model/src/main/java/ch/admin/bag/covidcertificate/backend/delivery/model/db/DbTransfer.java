@@ -8,6 +8,7 @@ public class DbTransfer {
     private Instant createdAt;
     private String code;
     private String publicKey;
+    private String publicKeySha256; // base64 encoded
     private Algorithm algorithm;
 
     public Integer getPk() {
@@ -40,6 +41,14 @@ public class DbTransfer {
 
     public void setPublicKey(String publicKey) {
         this.publicKey = publicKey;
+    }
+
+    public String getPublicKeySha256() {
+        return publicKeySha256;
+    }
+
+    public void setPublicKeySha256(String publicKeySha256) {
+        this.publicKeySha256 = publicKeySha256;
     }
 
     public Algorithm getAlgorithm() {
