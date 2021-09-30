@@ -64,12 +64,14 @@ public class EcCrypto extends Crypto {
         if (xArray.length == 33) {
             System.arraycopy(xArray, 1, bobPublic, 1, xArray.length - 1);
         } else {
-            System.arraycopy(xArray, 0, bobPublic, 1, xArray.length);
+            var zeroPadding = 32 - xArray.length;
+            System.arraycopy(xArray, 0, bobPublic, 1 + zeroPadding, xArray.length);
         }
         if (yArray.length == 33) {
             System.arraycopy(yArray, 1, bobPublic, 33, yArray.length - 1);
         } else {
-            System.arraycopy(yArray, 0, bobPublic, 33, yArray.length);
+            var zeroPadding = 32 - yArray.length;
+            System.arraycopy(yArray, 0, bobPublic, 33 + zeroPadding, yArray.length);
         }
 
         // generate a publickey from ios publickeydata
