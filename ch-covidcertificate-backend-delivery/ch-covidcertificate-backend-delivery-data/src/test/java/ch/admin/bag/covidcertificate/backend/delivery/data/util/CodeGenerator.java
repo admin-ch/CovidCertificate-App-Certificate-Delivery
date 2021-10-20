@@ -3,6 +3,7 @@ package ch.admin.bag.covidcertificate.backend.delivery.data.util;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 public class CodeGenerator {
@@ -21,7 +22,7 @@ public class CodeGenerator {
             ALPHABET.stream().mapToInt(i -> i).max().orElseThrow(NoSuchElementException::new);
 
     public static String generateCode() {
-        Random random = new Random();
+        Random random = ThreadLocalRandom.current();
         int length = 9;
 
         return random.ints(LEFT_LIMIT, RIGHT_LIMIT + 1)

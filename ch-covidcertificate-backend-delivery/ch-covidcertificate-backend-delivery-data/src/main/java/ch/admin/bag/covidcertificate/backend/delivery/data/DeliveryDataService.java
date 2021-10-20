@@ -17,7 +17,7 @@ import java.util.List;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface DeliveryDataService {
-    public void initTransfer(DeliveryRegistration registration)
+    public void initTransfer(DeliveryRegistration registration, Instant validUntil)
             throws CodeAlreadyExistsException, PublicKeyAlreadyExistsException,
                     NoSuchAlgorithmException;
 
@@ -50,7 +50,7 @@ public interface DeliveryDataService {
     public void insertCovidCert(DbCovidCert covidCert);
 
     @Transactional(readOnly = false)
-    void cleanDB(Duration retentionPeriod);
+    void cleanDB();
 
     public int countRegistrations();
 }

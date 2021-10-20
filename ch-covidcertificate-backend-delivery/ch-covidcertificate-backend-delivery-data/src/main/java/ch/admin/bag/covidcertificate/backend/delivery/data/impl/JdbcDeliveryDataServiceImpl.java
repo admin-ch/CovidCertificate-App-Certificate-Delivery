@@ -62,7 +62,7 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
 
     @Override
     @Transactional(readOnly = false)
-    public void initTransfer(DeliveryRegistration registration)
+    public void initTransfer(DeliveryRegistration registration, Instant validUntil)
             throws CodeAlreadyExistsException, PublicKeyAlreadyExistsException,
                     NoSuchAlgorithmException {
         if (transferCodeExists(registration.getCode())) {
@@ -71,7 +71,7 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
             throw new PublicKeyAlreadyExistsException(
                     registration.getPublicKey(), registration.getCode());
         } else {
-            transferInsert.execute(createTransferParams(registration));
+            transferInsert.execute(createTransferParams(registration, validUntil));
         }
     }
 
@@ -240,9 +240,9 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
 
     @Override
     @Transactional(readOnly = false)
-    public void cleanDB(Duration retentionPeriod) {
-        var sql = "delete from t_transfer where created_at < :retention_time";
-        var retentionTime = Instant.now().minus(retentionPeriod);
+    public void cleanDB() {
+        var sql = "delete from t_transfer where valid_until < :retention_time";
+        var retentionTime = Instant.now();
         var params = new MapSqlParameterSource("retention_time", Date.from(retentionTime));
         jt.update(sql, params);
     }
@@ -260,13 +260,14 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
         return params;
     }
 
-    private MapSqlParameterSource createTransferParams(DeliveryRegistration registration)
+    private MapSqlParameterSource createTransferParams(DeliveryRegistration registration, Instant validUntil)
             throws NoSuchAlgorithmException {
         var params = new MapSqlParameterSource();
         params.addValue("code", registration.getCode());
         params.addValue("public_key", registration.getPublicKey());
         params.addValue("public_key_sha_256", HashUtil.getSha256Hash(registration.getPublicKey()));
         params.addValue("algorithm", registration.getAlgorithm().name());
+        params.addValue("valid_until", validUntil);
         return params;
     }
 

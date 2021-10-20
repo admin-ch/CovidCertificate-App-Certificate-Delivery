@@ -54,10 +54,8 @@ public class SchedulingConfig {
     public void cleanCodes() {
         iosHeartbeatSilentPush.checkPushSchedule(pushInterval, pushScheduleInterval, pushBatchSize);
         try {
-            logger.info(
-                    "Removing transfer codes and related covid certs older than {} days",
-                    retentionPeriod.toDays());
-            deliveryDataService.cleanDB(retentionPeriod);
+            logger.info("Removing expired transfer codes and associated covid certs");
+            deliveryDataService.cleanDB();
         } catch (Exception e) {
             logger.error("Exception removing old transfer codes and covid certs", e);
         }

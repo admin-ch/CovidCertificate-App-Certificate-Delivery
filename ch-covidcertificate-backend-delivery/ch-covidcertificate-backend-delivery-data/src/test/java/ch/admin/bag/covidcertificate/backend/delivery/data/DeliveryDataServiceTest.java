@@ -31,8 +31,6 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAmount;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -66,24 +64,25 @@ class DeliveryDataServiceTest {
         final String publicKey = "public_key";
         // init transfer
         DeliveryRegistration registration = getDeliveryRegistration(CODE, publicKey);
-        deliveryDataService.initTransfer(registration);
+        Instant validUntil = Instant.now().plus(Duration.ofDays(30));
+        deliveryDataService.initTransfer(registration, validUntil);
 
         // attempt to init transfer with existing code
         assertThrows(
                 CodeAlreadyExistsException.class,
-                () -> deliveryDataService.initTransfer(registration));
+                () -> deliveryDataService.initTransfer(registration, validUntil));
 
         // test public key uniqueness
         assertThrows(
                 PublicKeyAlreadyExistsException.class,
                 () ->
                         deliveryDataService.initTransfer(
-                                getDeliveryRegistration(CodeGenerator.generateCode(), publicKey)));
+                                getDeliveryRegistration(CodeGenerator.generateCode(), publicKey), validUntil));
 
         // init transfer with different code
         DeliveryRegistration otherRegistration =
                 getDeliveryRegistration("OTHER", "other_public_key");
-        deliveryDataService.initTransfer(otherRegistration);
+        deliveryDataService.initTransfer(otherRegistration, validUntil);
     }
 
     private DeliveryRegistration getDeliveryRegistration(String code, String publicKey) {
@@ -101,8 +100,9 @@ class DeliveryDataServiceTest {
     @Test
     void testFindCovidCode() throws Exception {
         // init transfer
+        Instant validUntil = Instant.now().plus(Duration.ofDays(30));
         DeliveryRegistration registration = getDeliveryRegistration(CODE);
-        deliveryDataService.initTransfer(registration);
+        deliveryDataService.initTransfer(registration, validUntil);
 
         // find covid certs
         List<CovidCert> covidCerts = deliveryDataService.findCovidCerts(CODE);
@@ -115,8 +115,9 @@ class DeliveryDataServiceTest {
     @Test
     void testCloseTransfer() throws Exception {
         // init transfer
+        Instant validUntil = Instant.now().plus(Duration.ofDays(30));
         DeliveryRegistration registration = getDeliveryRegistration(CODE);
-        deliveryDataService.initTransfer(registration);
+        deliveryDataService.initTransfer(registration, validUntil);
 
         // close transfer
         deliveryDataService.closeTransfer(CODE);
@@ -124,7 +125,7 @@ class DeliveryDataServiceTest {
         // check transfer is closed
         assertThrows(CodeNotFoundException.class, () -> deliveryDataService.findCovidCerts(CODE));
         // code is available again
-        deliveryDataService.initTransfer(registration);
+        deliveryDataService.initTransfer(registration, validUntil);
     }
 
     @Test
@@ -243,8 +244,9 @@ class DeliveryDataServiceTest {
     @Test
     void testCleanDB() throws Exception {
         // init transfer
+        Instant validUntil = Instant.now().minus(Duration.ofDays(1));
         DeliveryRegistration registration = getDeliveryRegistration(CODE);
-        deliveryDataService.initTransfer(registration);
+        deliveryDataService.initTransfer(registration, validUntil);
         // insert covid cert
         var dbCovidCert = new DbCovidCert();
         dbCovidCert.setFkTransfer(deliveryDataService.findPkTransferId(CODE));
@@ -253,7 +255,7 @@ class DeliveryDataServiceTest {
         deliveryDataService.insertCovidCert(dbCovidCert);
         assertEquals(1, deliveryDataService.findCovidCerts(CODE).size());
         // delete everything
-        deliveryDataService.cleanDB(Duration.ofDays(-1));
+        deliveryDataService.cleanDB();
         assertThrows(CodeNotFoundException.class, () -> deliveryDataService.findTransfer(CODE));
         assertThrows(CodeNotFoundException.class, () -> deliveryDataService.findCovidCerts(CODE));
     }
