@@ -64,25 +64,26 @@ class DeliveryDataServiceTest {
         final String publicKey = "public_key";
         // init transfer
         DeliveryRegistration registration = getDeliveryRegistration(CODE, publicKey);
-        Instant validUntil = Instant.now().plus(Duration.ofDays(30));
-        deliveryDataService.initTransfer(registration, validUntil);
+        Instant expiresAt = Instant.now().plus(Duration.ofDays(30));
+        Instant failsAt = Instant.now().plus(Duration.ofDays(33));
+        deliveryDataService.initTransfer(registration, expiresAt, failsAt);
 
         // attempt to init transfer with existing code
         assertThrows(
                 CodeAlreadyExistsException.class,
-                () -> deliveryDataService.initTransfer(registration, validUntil));
+                () -> deliveryDataService.initTransfer(registration, expiresAt, failsAt));
 
         // test public key uniqueness
         assertThrows(
                 PublicKeyAlreadyExistsException.class,
                 () ->
                         deliveryDataService.initTransfer(
-                                getDeliveryRegistration(CodeGenerator.generateCode(), publicKey), validUntil));
+                                getDeliveryRegistration(CodeGenerator.generateCode(), publicKey), expiresAt, failsAt));
 
         // init transfer with different code
         DeliveryRegistration otherRegistration =
                 getDeliveryRegistration("OTHER", "other_public_key");
-        deliveryDataService.initTransfer(otherRegistration, validUntil);
+        deliveryDataService.initTransfer(otherRegistration, expiresAt, failsAt);
     }
 
     private DeliveryRegistration getDeliveryRegistration(String code, String publicKey) {
@@ -100,9 +101,10 @@ class DeliveryDataServiceTest {
     @Test
     void testFindCovidCode() throws Exception {
         // init transfer
-        Instant validUntil = Instant.now().plus(Duration.ofDays(30));
+        Instant expiresAt = Instant.now().plus(Duration.ofDays(30));
+        Instant failsAt = Instant.now().plus(Duration.ofDays(30));
         DeliveryRegistration registration = getDeliveryRegistration(CODE);
-        deliveryDataService.initTransfer(registration, validUntil);
+        deliveryDataService.initTransfer(registration, expiresAt, failsAt);
 
         // find covid certs
         List<CovidCert> covidCerts = deliveryDataService.findCovidCerts(CODE);
@@ -115,9 +117,10 @@ class DeliveryDataServiceTest {
     @Test
     void testCloseTransfer() throws Exception {
         // init transfer
-        Instant validUntil = Instant.now().plus(Duration.ofDays(30));
+        Instant expiresAt = Instant.now().plus(Duration.ofDays(30));
+        Instant failsAt = Instant.now().plus(Duration.ofDays(30));
         DeliveryRegistration registration = getDeliveryRegistration(CODE);
-        deliveryDataService.initTransfer(registration, validUntil);
+        deliveryDataService.initTransfer(registration, expiresAt, failsAt);
 
         // close transfer
         deliveryDataService.closeTransfer(CODE);
@@ -125,7 +128,7 @@ class DeliveryDataServiceTest {
         // check transfer is closed
         assertThrows(CodeNotFoundException.class, () -> deliveryDataService.findCovidCerts(CODE));
         // code is available again
-        deliveryDataService.initTransfer(registration, validUntil);
+        deliveryDataService.initTransfer(registration, expiresAt, failsAt);
     }
 
     @Test
@@ -244,9 +247,10 @@ class DeliveryDataServiceTest {
     @Test
     void testCleanDB() throws Exception {
         // init transfer
-        Instant validUntil = Instant.now().minus(Duration.ofDays(1));
+        Instant expiresAt = Instant.now().minus(Duration.ofDays(4));
+        Instant failsAt = Instant.now().minus(Duration.ofDays(1));
         DeliveryRegistration registration = getDeliveryRegistration(CODE);
-        deliveryDataService.initTransfer(registration, validUntil);
+        deliveryDataService.initTransfer(registration, expiresAt, failsAt);
         // insert covid cert
         var dbCovidCert = new DbCovidCert();
         dbCovidCert.setFkTransfer(deliveryDataService.findPkTransferId(CODE));

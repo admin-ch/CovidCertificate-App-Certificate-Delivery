@@ -64,8 +64,11 @@ public class AppController {
     protected final Crypto rsaCrypto;
     private final SignaturePayloadValidator signaturePayloadValidator;
 
-    @Value("${app.transferCode.validity}")
-    private Duration transferCodeValidity;
+    @Value("${app.transferCode.displayValidity}")
+    private Duration transferCodeDisplayValidity;
+
+    @Value("${app.transferCode.actualValidity}")
+    private Duration transferCodeActualValidity;
 
     public AppController(
             DeliveryDataService deliveryDataService,

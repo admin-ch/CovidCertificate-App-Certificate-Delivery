@@ -17,7 +17,7 @@ import java.util.List;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface DeliveryDataService {
-    public void initTransfer(DeliveryRegistration registration, Instant validUntil)
+    public void initTransfer(DeliveryRegistration registration, Instant expiresAt, Instant failsAt)
             throws CodeAlreadyExistsException, PublicKeyAlreadyExistsException,
                     NoSuchAlgorithmException;
 
