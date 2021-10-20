@@ -8,10 +8,9 @@ import javax.validation.constraints.Size;
 public class DeliveryRegistration {
     @Documentation(
             description =
-                    "client generated alpha numeric code used as identifier during the entire transfer",
+                    "(DEPRECATED) client generated alpha numeric code used as identifier during the entire transfer",
             example = "A7KBZ91XL")
     @NotNull
-    @Size(min = 9, max = 9)
     private String code;
 
     @Documentation(

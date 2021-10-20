@@ -1,6 +1,7 @@
 package ch.admin.bag.covidcertificate.backend.delivery.ws.security.signature;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.jsonwebtoken.Jwts;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -42,7 +43,7 @@ public class JwsMessageConverter extends AbstractGenericHttpMessageConverter<Obj
                     NoSuchAlgorithmException {
         super(JWS_MEDIA_TYPE);
         this.keyStore = keyStore;
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         this.alias = this.keyStore.aliases().nextElement();
         this.password = password;
         this.certificateChain =

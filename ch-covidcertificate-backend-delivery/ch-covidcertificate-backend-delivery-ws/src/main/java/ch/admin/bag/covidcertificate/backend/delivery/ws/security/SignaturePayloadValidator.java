@@ -24,10 +24,11 @@ public class SignaturePayloadValidator {
         }
 
         validateTimestamp(Long.valueOf(signaturePayloadSplit[2]));
-
+/*
         if (!code.equals(CodeHelper.getSanitizedCode(signaturePayloadSplit[1]))) {
             throw new InvalidSignaturePayloadException();
-        }
+        }*/
+        //TODO define new payload
 
         if (!expectedAction.equals(Action.forName(signaturePayloadSplit[0]))) {
             throw new InvalidActionException();

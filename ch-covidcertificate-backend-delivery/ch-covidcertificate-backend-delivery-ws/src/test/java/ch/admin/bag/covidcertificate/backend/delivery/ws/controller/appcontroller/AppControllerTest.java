@@ -15,6 +15,7 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCertDelivery;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistration;
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistrationResult;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.RequestDeliveryPayload;
@@ -33,6 +34,7 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -90,6 +92,27 @@ public abstract class AppControllerTest extends BaseControllerTest {
 
         // code released
         registerForDelivery(registration);
+    }
+
+    @Test
+    public void codeGenerationOnServer() throws Exception {
+        refreshKeys();
+
+        DeliveryRegistration registration =
+            getDeliveryRegistration(Action.REGISTER, "", Instant.now(), this.algorithm);
+
+        // successful register
+        MockHttpServletResponse response = registerForDelivery(registration);
+        DeliveryRegistrationResult result = testHelper.verifyAndReadValue(response, acceptMediaType, TestHelper.PATH_TO_CA_PEM, DeliveryRegistrationResult.class);
+
+            //readValue(response.getContentAsString(), DeliveryRegistrationResult.class);
+
+       registration.setCode(result.getCode());
+        // complete transfer
+        completeTransfer(registration);
+
+        // code released
+        //registerForDelivery(registration);
     }
 
     @Test
@@ -235,6 +258,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
     }
 
     @Test
+    @Disabled("Code length can't be enforced with server-side generation")
     public void invalidCodeLengthTest() throws Exception {
         refreshKeys();
         for (String invalidCode : List.of("TOOSHORT", "TOOLONG000")) {
@@ -306,9 +330,12 @@ public abstract class AppControllerTest extends BaseControllerTest {
             }
         }
 
+
+        //TODO re-enable after new payload specified
         // invalid signature payload (code)
-        RequestDeliveryPayload payload =
+        /*RequestDeliveryPayload payload =
                 getRequestDeliveryPayload(expectedAction, code, Instant.now(), this.algorithm);
+
         // swap signature and signature payload with wrong code
         payload.setSignaturePayload(payload.getSignaturePayload().replace(code, UNREGISTERED_CODE));
         payload.setSignature(
@@ -321,7 +348,7 @@ public abstract class AppControllerTest extends BaseControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .accept(acceptMediaType))
                 .andExpect(status().is(HttpStatus.FORBIDDEN.value()));
-
+*/
         // invalid signature payload (timestamp)
         mockMvc.perform(
                         post(endpoint)

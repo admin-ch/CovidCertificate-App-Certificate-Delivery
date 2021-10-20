@@ -18,6 +18,7 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.app.Algorithm;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.CovidCertDelivery;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistration;
+import ch.admin.bag.covidcertificate.backend.delivery.model.app.DeliveryRegistrationResult;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration;
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.RequestDeliveryPayload;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
@@ -50,6 +51,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import ch.admin.bag.covidcertificate.backend.delivery.data.util.CodeGenerator;
 
 @Controller
 @RequestMapping("/app/delivery/v1")
@@ -96,14 +98,17 @@ public class AppController {
             })
     @CrossOrigin(origins = {"https://editor.swagger.io"})
     @PostMapping(value = "/covidcert/register")
-    public ResponseEntity<String> registerForDelivery(
+    public ResponseEntity<DeliveryRegistrationResult> registerForDelivery(
             @Valid @RequestBody DeliveryRegistration registration)
             throws CodeAlreadyExistsException, InvalidSignatureException, InvalidActionException,
                     InvalidSignaturePayloadException, InvalidPublicKeyException,
                     NoSuchAlgorithmException, InvalidTimestampException,
                     PublicKeyAlreadyExistsException {
         String code = registration.getCode();
-        if (code != null) {
+        Instant expiresAt = Instant.now().plus(transferCodeDisplayValidity);
+        Instant failsAt = Instant.now().plus(transferCodeActualValidity);
+
+        if (code != null && !code.equals("")) {
             //legacy registration with code generated on device
             logger.info("registration for transfer code {} requested", code);
             validateSignature(
@@ -113,7 +118,7 @@ public class AppController {
                 registration.getSignature());
             signaturePayloadValidator.validate(
                 registration.getSignaturePayload(), Action.REGISTER, code);
-            deliveryDataService.initTransfer(registration, Instant.now().plus(transferCodeValidity));
+            deliveryDataService.initTransfer(registration, expiresAt, failsAt);
             logger.info(
                 "registration for transfer code {} successful. publicKey sha256 hash: {}",
                 code,
@@ -121,7 +126,26 @@ public class AppController {
             return ResponseEntity.ok().build();
         }else{
             //new registration flow with code generated here
-            return ResponseEntity.badRequest().body("Server-side code generation is not ready yet");
+            logger.info("registration requested with publicKey hash {}", HashUtil.getSha256Hash(registration.getPublicKey()));
+            code = CodeGenerator.generateCode();
+            registration.setCode(code);
+
+            validateSignature(
+                registration.getPublicKey(),
+                registration.getAlgorithm(),
+                registration.getSignaturePayload(),
+                registration.getSignature());
+            signaturePayloadValidator.validate(
+                registration.getSignaturePayload(), Action.REGISTER, code);
+
+            deliveryDataService.initTransfer(registration, expiresAt, failsAt);
+
+
+            logger.info(
+                "registration for transfer code {} successful. publicKey sha256 hash: {}",
+                code,
+                HashUtil.getSha256Hash(registration.getPublicKey()));
+            return ResponseEntity.ok(new DeliveryRegistrationResult(code, expiresAt, failsAt));
         }
     }
 

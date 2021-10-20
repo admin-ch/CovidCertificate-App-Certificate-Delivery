@@ -16,6 +16,7 @@ import ch.admin.bag.covidcertificate.backend.delivery.ws.security.Action;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.security.encryption.CryptoHelper;
 import ch.admin.bag.covidcertificate.backend.delivery.ws.util.TestHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -72,7 +73,7 @@ public abstract class BaseControllerTest {
     }
 
     @Autowired protected MockMvc mockMvc;
-    protected ObjectMapper objectMapper = new ObjectMapper();
+    protected ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     protected TestHelper testHelper = new TestHelper(objectMapper);
 
     protected KeyPair ecKeyPair;
@@ -135,13 +136,13 @@ public abstract class BaseControllerTest {
         return MediaType.TEXT_PLAIN;
     }
 
-    protected void registerForDelivery(DeliveryRegistration registration) throws Exception {
-        mockMvc.perform(
+    protected MockHttpServletResponse registerForDelivery(DeliveryRegistration registration) throws Exception {
+        return mockMvc.perform(
                         post(getInitEndpoint())
                                 .content(asJsonString(registration))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .accept(acceptMediaType))
-                .andExpect(status().is2xxSuccessful());
+                .andExpect(status().is2xxSuccessful()).andReturn().getResponse();
     }
 
     private String getInitEndpoint() {
