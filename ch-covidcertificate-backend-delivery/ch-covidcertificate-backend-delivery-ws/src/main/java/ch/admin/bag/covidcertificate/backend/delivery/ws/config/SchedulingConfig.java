@@ -24,6 +24,16 @@ public class SchedulingConfig {
     @Value("${db.retentionPeriod:P30D}")
     private Duration retentionPeriod;
 
+    @Value("${push.pushInterval:PT2h}")
+    private Duration pushInterval;
+
+    @Value("${push.schedulerInterval:PT10m}")
+    private Duration pushScheduleInterval;
+
+    @Value("${push.batchSize:100000}")
+    private int pushBatchSize;
+
+
     public SchedulingConfig(
             IosHeartbeatSilentPush iosHeartbeatSilentPush,
             DeliveryDataService deliveryDataService) {
@@ -31,17 +41,18 @@ public class SchedulingConfig {
         this.deliveryDataService = deliveryDataService;
     }
 
-    // Runs the method every 2 hours starting at 0am, of every day
-    @Scheduled(cron = "${push.ios.cron:0 0 0/2 ? * *}")
+
+    @Scheduled(fixedRateString = "${push.schedulerInterval:PT10m}")
     @SchedulerLock(name = "silent_push", lockAtLeastFor = "PT15S")
     public void iosHeartbeat() {
-        iosHeartbeatSilentPush.sendHeartbeats();
+        iosHeartbeatSilentPush.sendHeartbeats(pushInterval, pushBatchSize);
     }
 
     // Runs the method every day at 00:00:00am
     @Scheduled(cron = "${db.cleanCron:0 0 0 ? * *}")
     @SchedulerLock(name = "db_cleanup", lockAtLeastFor = "PT10S")
     public void cleanCodes() {
+        iosHeartbeatSilentPush.checkPushSchedule(pushInterval, pushScheduleInterval, pushBatchSize);
         try {
             logger.info(
                     "Removing transfer codes and related covid certs older than {} days",

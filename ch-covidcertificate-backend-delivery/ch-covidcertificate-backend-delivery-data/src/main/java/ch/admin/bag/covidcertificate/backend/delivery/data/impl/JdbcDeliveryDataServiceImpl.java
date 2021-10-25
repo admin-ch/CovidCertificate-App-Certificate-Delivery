@@ -14,15 +14,24 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
 import java.security.NoSuchAlgorithmException;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import org.apache.logging.log4j.util.Strings;
+import org.postgresql.util.PGInterval;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -162,6 +171,13 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
         }
     }
 
+    @Override
+    @Transactional(readOnly = false)
+    public void updateLastPushTImes(Collection<PushRegistration> registrations){
+        jt.batchUpdate("update t_push_registration set last_push = now() where pk_push_registration_id = :id",
+            SqlParameterSourceUtils.createBatch(registrations));
+    }
+
     private boolean pushRegistrationExists(PushRegistration registration) {
         String sql =
                 "select exists("
@@ -203,6 +219,20 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<PushRegistration> getDuePushRegistrations(PushType pushType,
+        Duration timeSinceLastPush, int limit) {
+        final var sql =
+            "select * from t_push_registration where push_type = :push_type and last_push is null or last_push < now()  - :interval order by last_push asc limit :batch_size";
+        final var params = new MapSqlParameterSource("push_type", pushType.name());
+        PGInterval interval =  new PGInterval();
+        interval.setSeconds(timeSinceLastPush.toSeconds());
+        params.addValue("interval", interval);
+        params.addValue("batch_size", limit);
+        return jt.query(sql, params, new PushRegistrationRowMapper());
+    }
+
+    @Override
     @Transactional(readOnly = false)
     public void insertCovidCert(DbCovidCert covidCert) {
         covidCertInsert.execute(createCovidCertParams(covidCert));
@@ -215,6 +245,11 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
         var retentionTime = Instant.now().minus(retentionPeriod);
         var params = new MapSqlParameterSource("retention_time", Date.from(retentionTime));
         jt.update(sql, params);
+    }
+
+    @Override
+    public int countRegistrations() {
+        return jt.queryForObject("select count(pk_push_registration_id) from t_push_registration", new HashMap<>(), Integer.class);
     }
 
     private MapSqlParameterSource createPushRegistrationParams(PushRegistration registration) {
