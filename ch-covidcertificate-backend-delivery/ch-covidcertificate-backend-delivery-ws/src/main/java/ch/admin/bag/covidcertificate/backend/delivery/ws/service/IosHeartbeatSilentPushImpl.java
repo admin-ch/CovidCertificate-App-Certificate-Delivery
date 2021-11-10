@@ -95,7 +95,7 @@ public class IosHeartbeatSilentPushImpl implements IosHeartbeatSilentPush {
         logger.info("Load batch of tokens from database");
         for (PushType pushType : PushType.values()) {
             List <PushRegistration> registrationList =
-                pushRegistrationDataService.getDuePushRegistrations(pushType, pushInterval, pushLimit);//TODO make configurable
+                pushRegistrationDataService.getDuePushRegistrations(pushType, pushInterval, pushLimit);
             logger.info("Retrieved {} {} push tokens", registrationList.size(), pushType);
             Set<String> pushTokens = new HashSet<>();
             registrationsToTokens(registrationList, pushTokens);
