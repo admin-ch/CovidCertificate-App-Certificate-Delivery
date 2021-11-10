@@ -30,7 +30,7 @@ public class SchedulingConfig {
     @Value("${push.schedulerInterval:PT10m}")
     private Duration pushScheduleInterval;
 
-    @Value("${push.batchSize:100000}")
+    @Value("${push.batchSize:10000}")
     private int pushBatchSize;
 
 
