@@ -2,6 +2,7 @@ package ch.admin.bag.covidcertificate.backend.delivery.model.app;
 
 import ch.ubique.openapi.docannotations.Documentation;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.time.Instant;
 import javax.validation.constraints.NotNull;
 
 public class PushRegistration {
@@ -11,6 +12,7 @@ public class PushRegistration {
     @NotNull private PushType pushType;
     @NotNull private String registerId;
     @JsonIgnore private int id;
+    @JsonIgnore private Instant lastPush;
 
     public String getPushToken() {
         return pushToken;
@@ -42,5 +44,13 @@ public class PushRegistration {
 
     public void setRegisterId(String registerId) {
         this.registerId = registerId;
+    }
+
+    public Instant getLastPush() {
+        return lastPush;
+    }
+
+    public void setLastPush(Instant lastPush) {
+        this.lastPush = lastPush;
     }
 }

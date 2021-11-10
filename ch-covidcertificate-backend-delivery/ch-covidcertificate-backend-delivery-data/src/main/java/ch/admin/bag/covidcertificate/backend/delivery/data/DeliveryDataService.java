@@ -12,6 +12,7 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbTransfer;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,14 +36,21 @@ public interface DeliveryDataService {
     public void upsertPushRegistration(PushRegistration registration);
 
     @Transactional(readOnly = false)
+    void updateLastPushTImes(Collection<PushRegistration> registrations);
+
+    @Transactional(readOnly = false)
     void removeRegistration(String registerId);
 
     void removeRegistrations(List<String> tokensToRemove);
 
     List<PushRegistration> getPushRegistrationByType(PushType pushType, int prevMaxId);
 
+    List<PushRegistration> getDuePushRegistrations(PushType pushType, Duration timeSinceLastPush, int limit);
+
     public void insertCovidCert(DbCovidCert covidCert);
 
     @Transactional(readOnly = false)
     void cleanDB(Duration retentionPeriod);
+
+    public int countRegistrations();
 }

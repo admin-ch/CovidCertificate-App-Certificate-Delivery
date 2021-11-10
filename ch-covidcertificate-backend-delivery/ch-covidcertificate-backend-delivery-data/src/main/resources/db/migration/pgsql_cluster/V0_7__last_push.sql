@@ -1,0 +1,1 @@
+alter table t_push_registration add column last_push timestamp with time zone;

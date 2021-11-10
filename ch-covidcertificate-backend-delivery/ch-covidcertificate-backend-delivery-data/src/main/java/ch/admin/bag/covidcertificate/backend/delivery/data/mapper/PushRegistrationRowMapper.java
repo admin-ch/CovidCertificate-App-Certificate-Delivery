@@ -15,6 +15,9 @@ public class PushRegistrationRowMapper implements RowMapper<PushRegistration> {
         pushRegistration.setPushType(PushType.valueOf(rs.getString("push_type")));
         pushRegistration.setRegisterId(rs.getString("register_id"));
         pushRegistration.setId(rs.getInt("pk_push_registration_id"));
+        if(rs.getTimestamp("last_push") != null){
+            pushRegistration.setLastPush(rs.getTimestamp("last_push").toInstant());
+        }
         return pushRegistration;
     }
 }

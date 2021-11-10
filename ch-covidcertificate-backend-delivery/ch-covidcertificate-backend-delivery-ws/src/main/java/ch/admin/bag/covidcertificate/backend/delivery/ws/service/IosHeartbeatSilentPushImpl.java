@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -89,30 +90,33 @@ public class IosHeartbeatSilentPushImpl implements IosHeartbeatSilentPush {
         }
     }
 
-    public void sendHeartbeats() {
+    public void sendHeartbeats(Duration pushInterval, int pushLimit) {
         logger.info("Send iOS heartbeat push");
-        logger.info("Load tokens from database batch-wise.");
+        logger.info("Load batch of tokens from database");
         for (PushType pushType : PushType.values()) {
-            var maxId = 0;
-            var nextMaxId = 0;
-            List<PushRegistration> registrationList;
-            var done = false;
-            do {
-                done = true;
-                registrationList =
-                        pushRegistrationDataService.getPushRegistrationByType(pushType, maxId);
-                logger.info("Found {} {} push tokens", registrationList.size(), pushType);
-                if (!registrationList.isEmpty()) {
-                    done = false;
-                    Set<String> pushTokens = new HashSet<>();
-                    nextMaxId = registrationsToTokens(registrationList, pushTokens);
-                    sendPushNotificationsBatch(pushTokens, pushType);
-                }
-                maxId = nextMaxId;
-            } while (!done);
+            List <PushRegistration> registrationList =
+                pushRegistrationDataService.getDuePushRegistrations(pushType, pushInterval, pushLimit);
+            logger.info("Retrieved {} {} push tokens", registrationList.size(), pushType);
+            Set<String> pushTokens = new HashSet<>();
+            registrationsToTokens(registrationList, pushTokens);
+            sendPushNotificationsBatch(pushTokens, pushType);
+            pushRegistrationDataService.updateLastPushTImes(registrationList);
         }
         logger.info("iOS hearbeat push done");
     }
+
+    @Override
+    public void checkPushSchedule(Duration pushInterval, Duration pushSchedule, int batchSize) {
+        float loadFactor = IosHeartbeatSilentPush.calculatePushLoadFactor(pushInterval, pushSchedule, batchSize, pushRegistrationDataService.countRegistrations());
+        if(loadFactor > 0.8){
+            logger.warn("iOS silent push schedule is about to overflow. Consider increasing batch sie or scheduler frequency. Load factor (overflow at 1.0): {}", loadFactor);
+        }else if(loadFactor >= 1.0){
+            logger.error("iOS silent pushes can no longer be delivered with this schedule. Increase batch size or frequency. Load factor: {}", loadFactor);
+        }else{
+            logger.info("iOS silent push schedule checked successfully. Load factor: {}", loadFactor);
+        }
+    }
+
 
     /**
      * Helper function to fill the push tokens from the list of push registrations into a separate

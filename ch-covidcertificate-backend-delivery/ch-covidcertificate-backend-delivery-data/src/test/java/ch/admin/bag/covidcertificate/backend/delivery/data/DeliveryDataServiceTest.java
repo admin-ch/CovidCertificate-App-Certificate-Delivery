@@ -30,6 +30,9 @@ import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushRegistration
 import ch.admin.bag.covidcertificate.backend.delivery.model.app.PushType;
 import ch.admin.bag.covidcertificate.backend.delivery.model.db.DbCovidCert;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAmount;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -209,6 +212,28 @@ class DeliveryDataServiceTest {
         } while (!registrationList.isEmpty());
     }
 
+    @Test
+    void testBatchedPushRegistrations(){
+
+        for (var i = 0; i < 20; i++) {
+            PushRegistration pushRegistration = new PushRegistration();
+            String pushToken = "push_token_" + i;
+            String registerId = "register_id_" + i;
+            pushRegistration.setPushToken(pushToken);
+            pushRegistration.setPushType(PushType.IOS);
+            pushRegistration.setRegisterId(registerId);
+            deliveryDataService.upsertPushRegistration(pushRegistration);
+        }
+        List<PushRegistration> max_10_registrations = deliveryDataService.getDuePushRegistrations(PushType.IOS, Duration.ofHours(1), 10);
+        assertEquals(10, max_10_registrations.size());
+        deliveryDataService.updateLastPushTImes(max_10_registrations);
+        List<PushRegistration> not_recently_pushed = deliveryDataService.getDuePushRegistrations(PushType.IOS, Duration.ofHours(1), 1000);
+        assertEquals(10, not_recently_pushed.size());
+        deliveryDataService.updateLastPushTImes(not_recently_pushed);
+        List<PushRegistration> none_left = deliveryDataService.getDuePushRegistrations(PushType.IOS, Duration.ofHours(1), 1000);
+        assertEquals(0, none_left.size());
+    }
+
     private void assertPushRegistration(PushRegistration expected, PushRegistration actual) {
         assertEquals(expected.getPushToken(), actual.getPushToken());
         assertEquals(expected.getPushType(), actual.getPushType());
@@ -231,5 +256,20 @@ class DeliveryDataServiceTest {
         deliveryDataService.cleanDB(Duration.ofDays(-1));
         assertThrows(CodeNotFoundException.class, () -> deliveryDataService.findTransfer(CODE));
         assertThrows(CodeNotFoundException.class, () -> deliveryDataService.findCovidCerts(CODE));
+    }
+
+    @Test
+    void testRegistrationCount() throws Exception{
+        for (var i = 0; i < 20; i++) {
+            PushRegistration pushRegistration = new PushRegistration();
+            String pushToken = "push_token_" + i;
+            String registerId = "register_id_" + i;
+            pushRegistration.setPushToken(pushToken);
+            pushRegistration.setPushType(PushType.IOS);
+            pushRegistration.setRegisterId(registerId);
+            deliveryDataService.upsertPushRegistration(pushRegistration);
+        }
+        int count = deliveryDataService.countRegistrations();
+        assertEquals(20, count);
     }
 }
