@@ -228,7 +228,7 @@ public class AppController {
     @ExceptionHandler({InvalidTimestampException.class})
     @ResponseStatus(HttpStatus.TOO_EARLY)
     public ResponseEntity<String> invalidTimestamp(InvalidTimestampException e) {
-        logger.error("received invalid timestamp. {}", e.toString());
+        logger.warn("received invalid timestamp. {}", e.toString());
         return ResponseEntity.status(HttpStatus.TOO_EARLY).body("I | TIME");
     }
 
