@@ -16,13 +16,13 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <spring-boot-version>2.5.3</spring-boot-version>
+        <spring-boot-version>2.6.1</spring-boot-version>
         <jackson-version>2.11.1</jackson-version>
         <jsonwebtoken-version>0.11.2</jsonwebtoken-version>
         <testcontainers-version>1.15.2</testcontainers-version>
         <shedlock.version>4.24.0</shedlock.version>
         <spring-cloud-connectors-version>2.0.7.RELEASE</spring-cloud-connectors-version>
-        <spring-cloud-sleuth-version>3.0.3</spring-cloud-sleuth-version>
+        <spring-cloud-sleuth-version>3.1.0</spring-cloud-sleuth-version>
 
         <itCoverageAgent/>
 
