@@ -92,6 +92,30 @@ public abstract class BaseControllerTest {
         cleanDatabase(dataSource.getConnection());
     }
 
+    @Test
+    public void testActuatorSecurity() throws Exception {
+        var response =
+                mockMvc.perform(get("/actuator/health"))
+                        .andExpect(status().is2xxSuccessful())
+                        .andReturn()
+                        .getResponse();
+        response =
+                mockMvc.perform(get("/actuator/loggers"))
+                        .andExpect(status().is(401))
+                        .andReturn()
+                        .getResponse();
+        response =
+                mockMvc.perform(
+                                get("/actuator/loggers")
+                                        .header(
+                                                "Authorization",
+                                                "Basic cHJvbWV0aGV1czpwcm9tZXRoZXVz"))
+                        .andExpect(status().isOk())
+                        .andReturn()
+                        .getResponse();
+    }
+
+
     public static class DockerPostgresDataSourceInitializer
             implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
