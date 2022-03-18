@@ -21,13 +21,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 @ActiveProfiles({"actuator-security"})
-@SpringBootTest(
-        properties = {
-            "ws.monitor.prometheus.user=prometheus",
-            "ws.monitor.prometheus.password=prometheus",
-            "management.endpoints.enabled-by-default=true",
-            "management.endpoints.web.exposure.include=*"
-        })
+@SpringBootTest
 @TestInstance(Lifecycle.PER_CLASS)
 public class CgsControllerJwsEcTest extends CgsControllerTest {
 
