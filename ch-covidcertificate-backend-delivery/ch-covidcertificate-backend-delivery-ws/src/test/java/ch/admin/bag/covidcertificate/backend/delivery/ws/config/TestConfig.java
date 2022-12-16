@@ -26,16 +26,9 @@ import org.springframework.context.annotation.Profile;
 public class TestConfig extends WsBaseConfig {
     private static final Logger logger = LoggerFactory.getLogger(TestConfig.class);
 
-    @Autowired DataSource dataSource;
-
-    @Override
-    public DataSource dataSource() {
-        return dataSource;
-    }
-
     @Bean
     @Override
-    public Flyway flyway() {
+    public Flyway flyway(DataSource dataSource) {
         final var flyway =
                 Flyway.configure()
                         .dataSource(dataSource)

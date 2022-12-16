@@ -61,9 +61,7 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
             "#{${ws.security.headers: {'X-Content-Type-Options':'nosniff', 'X-Frame-Options':'DENY','X-Xss-Protection':'1; mode=block'}}}")
     Map<String, String> additionalHeaders;
 
-    public abstract DataSource dataSource();
-
-    public abstract Flyway flyway();
+    public abstract Flyway flyway(DataSource dataSource);
 
     public abstract IosHeartbeatSilentPush iosHeartbeatSilentPush(
             DeliveryDataService pushRegistrationDataService);

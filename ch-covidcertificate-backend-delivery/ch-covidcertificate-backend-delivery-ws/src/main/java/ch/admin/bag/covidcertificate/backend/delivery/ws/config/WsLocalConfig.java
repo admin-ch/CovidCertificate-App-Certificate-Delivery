@@ -62,10 +62,10 @@ public class WsLocalConfig extends WsBaseConfig {
 
     @Bean
     @Override
-    public Flyway flyway() {
+    public Flyway flyway(DataSource dataSource) {
         Flyway flyWay =
                 Flyway.configure()
-                        .dataSource(dataSource())
+                        .dataSource(dataSource)
                         .locations("classpath:/db/migration/pgsql")
                         .load();
         flyWay.migrate();
