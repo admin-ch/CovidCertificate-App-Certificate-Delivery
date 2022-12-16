@@ -14,15 +14,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public abstract class WsCloudBaseConfig extends WsBaseConfig {
 
-    @Value("${datasource.maximumPoolSize:5}")
-    int dataSourceMaximumPoolSize;
-
-    @Value("${datasource.connectionTimeout:30000}")
-    int dataSourceConnectionTimeout;
-
-    @Value("${datasource.leakDetectionThreshold:0}")
-    int dataSourceLeakDetectionThreshold;
-
     @Value("${push.ios.signingkey}") // base64 encoded p8 file
     private String iosPushSigningKey;
 
