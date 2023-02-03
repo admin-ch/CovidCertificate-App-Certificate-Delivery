@@ -102,7 +102,7 @@
         <dependency>
             <groupId>ch.admin.bag.covidcertificate</groupId>
             <artifactId>cc-backend-logging</artifactId>
-            <version>1.0.5</version>
+            <version>1.0.6</version>
         </dependency>
 
         <!-- LogBack dependencies -->
