@@ -38,13 +38,13 @@ public class JwtConfig extends WebSecurityConfigurerAdapter {
     @Value("${ws.jwt.openid-configuration-url}")
     private String url;
 
-    @Value("${ws.jwt.jwks-json-key:jwks_uri}")
+    @Value("${ws.jwt.jwks-json-key}")
     private String jwksUriJsonKey;
-    @Value("${ws.jwt.verification.resource-access-path:resource_access}")
+    @Value("${ws.jwt.verification.resource-access-path}")
     private String resourceAccessPath;
-    @Value("${ws.jwt.verification.certificate-creator-role:certificatecreator}")
-    private String certificateCreatorRole;
-    @Value("${ws.jwt.verification.role-path:/ch-covidcertificate-backend-delivery-ws/roles}")
+    @Value("${ws.jwt.verification.certificate-delivery-role}")
+    private String certificateDeliveryRole;
+    @Value("${ws.jwt.verification.role-path}")
     private String rolePath;
 
     @Override
@@ -69,7 +69,7 @@ public class JwtConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     public DeliveryJWTValidator jwtValidator() {
-        return new DeliveryJWTValidator(resourceAccessPath, rolePath, certificateCreatorRole);
+        return new DeliveryJWTValidator(resourceAccessPath, rolePath, certificateDeliveryRole);
     }
 
     @Bean
