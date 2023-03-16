@@ -245,6 +245,12 @@ class DeliveryDataServiceTest {
         // init transfer
         DeliveryRegistration registration = getDeliveryRegistration(CODE);
         deliveryDataService.initTransfer(registration);
+        // insert push registration
+        PushRegistration pushRegistration = new PushRegistration();
+        pushRegistration.setPushToken("push_token");
+        pushRegistration.setPushType(PushType.IOS);
+        pushRegistration.setRegisterId("register_id");
+        deliveryDataService.upsertPushRegistration(pushRegistration);
         // insert covid cert
         var dbCovidCert = new DbCovidCert();
         dbCovidCert.setFkTransfer(deliveryDataService.findPkTransferId(CODE));
@@ -256,6 +262,7 @@ class DeliveryDataServiceTest {
         deliveryDataService.cleanDB(Duration.ofDays(-1));
         assertThrows(CodeNotFoundException.class, () -> deliveryDataService.findTransfer(CODE));
         assertThrows(CodeNotFoundException.class, () -> deliveryDataService.findCovidCerts(CODE));
+        assertEquals(0, deliveryDataService.countRegistrations());
     }
 
     @Test

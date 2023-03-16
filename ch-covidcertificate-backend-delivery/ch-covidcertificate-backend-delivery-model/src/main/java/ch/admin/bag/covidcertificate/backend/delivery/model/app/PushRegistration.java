@@ -13,6 +13,7 @@ public class PushRegistration {
     @NotNull private String registerId;
     @JsonIgnore private int id;
     @JsonIgnore private Instant lastPush;
+    @JsonIgnore private Instant updatedAt;
 
     public String getPushToken() {
         return pushToken;
