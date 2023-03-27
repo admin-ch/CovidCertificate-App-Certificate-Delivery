@@ -52,7 +52,7 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
         this.pushRegistrationInsert =
                 new SimpleJdbcInsert(dataSource)
                         .withTableName("t_push_registration")
-                        .usingGeneratedKeyColumns("pk_push_registration_id", "created_at");
+                        .usingGeneratedKeyColumns("pk_push_registration_id", "created_at", "updated_at");
         this.covidCertInsert =
                 new SimpleJdbcInsert(dataSource)
                         .withTableName("t_covidcert")
@@ -165,7 +165,7 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
         } else {
             var sql =
                     "update t_push_registration "
-                            + "set push_token = :push_token, register_id = :register_id "
+                            + "set push_token = :push_token, register_id = :register_id, updated_at = now() "
                             + "where push_token = :push_token or register_id = :register_id";
             jt.update(sql, createPushRegistrationParams(registration));
         }
@@ -241,10 +241,14 @@ public class JdbcDeliveryDataServiceImpl implements DeliveryDataService {
     @Override
     @Transactional(readOnly = false)
     public void cleanDB(Duration retentionPeriod) {
-        var sql = "delete from t_transfer where created_at < :retention_time";
+        var transferSql = "delete from t_transfer where created_at < :retention_time";
+        var pushSql = "delete from t_push_registration where created_at < :retention_time";
+
         var retentionTime = Instant.now().minus(retentionPeriod);
         var params = new MapSqlParameterSource("retention_time", Date.from(retentionTime));
-        jt.update(sql, params);
+
+        jt.update(transferSql, params);
+        jt.update(pushSql, params);
     }
 
     @Override
